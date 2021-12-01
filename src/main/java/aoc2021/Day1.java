@@ -1,5 +1,6 @@
 package aoc2021;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,16 +49,41 @@ public class Day1 {
         // There should be 7 increases
         System.out.printf("Expected 7 increases. There were %d increases.%n", testIncreases);
 
-
         // Read the input file
         List<Integer> readings = FileUtils.readFileToStream(DAY1_INPUT_TXT)
-                                              .map(Integer::valueOf)
-                                              .collect(Collectors.toList());
+                                          .map(Integer::valueOf)
+                                          .collect(Collectors.toList());
 
         // Count the measurements
         int increases = countIncreases(readings);
 
-        // There should be 7 increases
+        // Real number of increases
         System.out.printf("There were %d increases in the real data.%n", increases);
+
+        // PART 2
+
+        // Compute 3-value sliding sums
+        List<Integer> summedTestReadings = new ArrayList<>();
+        Integer[] testReadingArray = testReadings.toArray(new Integer[0]);
+        for (int i = 2; i < testReadingArray.length; i++) {
+            summedTestReadings.add(testReadingArray[i] + testReadingArray[i - 1] + testReadingArray[i - 2]);
+        }
+
+        testIncreases = countIncreases(summedTestReadings);
+
+        // There should be 5 increases
+        System.out.printf("Expected 5 increases of sums. There were %d increases.%n", testIncreases);
+
+        // Compute 3-value sliding sums
+        List<Integer> summedReadings = new ArrayList<>();
+        Integer[] readingArray = readings.toArray(new Integer[0]);
+        for (int i = 2; i < readingArray.length; i++) {
+            summedReadings.add(readingArray[i] + readingArray[i - 1] + readingArray[i - 2]);
+        }
+
+        increases = countIncreases(summedReadings);
+
+        // Real number of increases
+        System.out.printf("There were %d increases in the sums in the real data.%n", increases);
     }
 }
