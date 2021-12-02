@@ -36,6 +36,21 @@ public class Day2 {
         System.out.printf("The final position is %d and a depth of %d.%n", sub.horizontalPosition, sub.depth);
         System.out.printf("The product of the final position is: %d%n", sub.horizontalPosition * sub.depth);
 
+        // PART 2
+
+        // Follow the directions with a V2 sub
+        SubmarineV2 testSub2 = new SubmarineV2();
+        directSubmarine(testSub2, testDirections);
+
+        // The final position should be a horizontal position of 15 and a depth of 610.
+        System.out.printf("The final position is %d and a depth of %d.%n", testSub2.horizontalPosition, testSub2.depth);
+
+        // Follow the directions
+        SubmarineV2 sub2 = new SubmarineV2();
+        directSubmarine(sub2, directions);
+
+        System.out.printf("The final position is %d and a depth of %d.%n", sub2.horizontalPosition, sub2.depth);
+        System.out.printf("The product of the final position is: %d%n", sub2.horizontalPosition * sub2.depth);
     }
 
     /**
@@ -82,6 +97,26 @@ public class Day2 {
 
         void up(int amount) {
             depth -= amount;
+        }
+    }
+
+    /**
+     * Representation of a V2 submarine. It can move forward, up, or down.
+     */
+    static class SubmarineV2 extends Submarine {
+        int aim = 0;
+
+        void forward(int amount) {
+            horizontalPosition += amount;
+            depth += aim * amount;
+        }
+
+        void down(int amount) {
+            aim += amount;
+        }
+
+        void up(int amount) {
+            aim -= amount;
         }
     }
 }
