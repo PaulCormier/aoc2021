@@ -46,8 +46,8 @@ public class Day4 {
 
         // System.err.println(testBingoCards);
 
-        // int testScore = part1(testBingoCards, TEST_NUMBERS);
-        // System.out.println("The score for the test data is: " + testScore);
+        int testScore = part1(testBingoCards, TEST_NUMBERS);
+        System.out.println("The score for the test data is: " + testScore);
 
         // Read the test file
         List<String> bingoCardLines = FileUtils.readFileToStream(INPUT_TXT)
@@ -67,6 +67,14 @@ public class Day4 {
         int score = part1(bingoCards, NUMBERS);
         System.out.println("The score for the real data is: " + score);
         // System.err.println(bingoCards);
+
+        // PART 2
+
+        // What id the score of the last card to win?
+        testScore = part2(testBingoCards, TEST_NUMBERS);
+        System.out.println("The score for the test data is: " + testScore);
+        score = part2(bingoCards, NUMBERS);
+        System.out.println("The score for the real data is: " + score);
     }
 
     /**
@@ -92,6 +100,43 @@ public class Day4 {
                     // Get the score of the winning card
                     return number * card.getScore();
             }
+
+            // System.err.println(bingoCards);
+
+        }
+        return -1;
+    }
+
+    /**
+     * Given a list of {@link BingoCard}s and a list of numbers, go through the
+     * list, and find the score of the last winning card.
+     * 
+     * @param bingoCards The list of bingo cards to check.
+     * @param numbers The list of numbers to check.
+     * @return The final score; which is the last winning card's score multiplied by
+     *     the winning number.
+     */
+    private static int part2(final List<BingoCard> bingoCards, final List<Integer> numbers) {
+
+        // System.err.println(bingoCards);
+
+        List<BingoCard> cardsLeft = new ArrayList<>(bingoCards);
+        // Mark the numbers sequentially, and
+        for (int number : numbers) {
+            // System.err.println("\n" + number);
+            List<BingoCard> winningCards = new ArrayList<>();
+            for (BingoCard card : cardsLeft) {
+                card.markNumber(number);
+                // watch for a winner
+                if (card.isBingo())
+                    // Remove it
+                    winningCards.add(card);
+            }
+            if (cardsLeft.size() == 1 && winningCards.size() == 1)
+                // We have a winner
+                return number * winningCards.get(0).getScore();
+            else
+                cardsLeft.removeAll(winningCards);
 
             // System.err.println(bingoCards);
 
