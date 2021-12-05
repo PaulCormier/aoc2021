@@ -2,6 +2,11 @@ package aoc2021;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 
 /**
  * https://adventofcode.com/2021/day/5
@@ -11,20 +16,26 @@ import java.util.stream.Collectors;
  */
 public class Day5 {
 
+    private static final Logger log = ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(Day5.class);
+
     private static final String INPUT_TXT = "Input-Day5.txt";
 
     private static final String TEST_INPUT_TXT = "TestInput-Day5.txt";
 
     public static void main(String[] args) {
 
+        log.setLevel(Level.DEBUG);
+
         // Read the test file
         List<Line> testLines = FileUtils.readFileToStream(TEST_INPUT_TXT)
                                         .map(Line::new)
                                         .collect(Collectors.toList());
-        // System.err.println(testLines);
+        log.trace(testLines.toString());
 
         int testCount = part1(testLines, 10);
-        System.out.printf("There are %d overlapping lines in the test data.%n", testCount);
+        log.info("There are {} overlapping lines in the test data.", testCount);
+
+        log.setLevel(Level.INFO);
 
         // Read the test file
         List<Line> lines = FileUtils.readFileToStream(INPUT_TXT)
@@ -32,15 +43,17 @@ public class Day5 {
                                     .collect(Collectors.toList());
 
         int realCount = part1(lines, 1000);
-        System.out.printf("There are %d overlapping lines in the real data.%n", realCount);
+        log.info("There are {} overlapping lines in the real data.", realCount);
 
         // PART 2
 
+        log.setLevel(Level.DEBUG);
         testCount = part2(testLines, 10);
-        System.out.printf("There are %d overlapping lines in the test data.%n", testCount);
+        log.info("There are {} overlapping lines in the test data.", testCount);
 
+        log.setLevel(Level.INFO);
         realCount = part2(lines, 1000);
-        System.out.printf("There are %d overlapping lines in the real data.%n", realCount);
+        log.info("There are {} overlapping lines in the real data.", realCount);
     }
 
     /**
@@ -60,15 +73,16 @@ public class Day5 {
 
         // Plot the lines
         for (Line line : importantLines) {
-            // System.err.println(line);
+            log.debug(line.toString());
 
             for (int x = line.x1; x <= line.x2; x++) {
                 for (int y = line.y1; y <= line.y2; y++) {
                     grid[y][x]++;
                 }
             }
-            // printGrid(grid);
-            // System.err.println();
+
+            if (log.isDebugEnabled())
+                log.debug("\n" + printGrid(grid));
         }
 
         // Count overlaps
@@ -101,12 +115,9 @@ public class Day5 {
                     grid[y][x]++;
                 }
             }
-            // printGrid(grid);
-            // System.err.println();
+            if (log.isDebugEnabled())
+                log.debug("\n" + printGrid(grid));
         }
-
-        printGrid(grid);
-        System.err.println();
 
         // Only consider diagonal lines
         List<Line> diagonalLines = lines.stream()
@@ -115,7 +126,7 @@ public class Day5 {
 
         // Plot the diagonal lines
         for (Line line : diagonalLines) {
-            // System.err.println(line);
+            log.trace(line.toString());
 
             for (int x = line.x1, y = line.y1; //
                     x <= line.x2 && ((line.y1 < line.y2 && y <= line.y2)
@@ -123,11 +134,9 @@ public class Day5 {
                     x++, y += (line.y1 < line.y2) ? 1 : -1) {
                 grid[y][x]++;
             }
-            // printGrid(grid);
-            // System.err.println();
+            if (log.isDebugEnabled())
+                log.debug("\n" + printGrid(grid));
         }
-
-        printGrid(grid);
 
         // Count overlaps
         int overlaps = countOverlaps(grid);
@@ -146,13 +155,16 @@ public class Day5 {
         return overlaps;
     }
 
-    private static void printGrid(int[][] grid) {
+    private static String printGrid(int[][] grid) {
+        StringBuilder gridString = new StringBuilder();
         for (int y = 0; y < grid.length; y++) {
             for (int x = 0; x < grid[y].length; x++) {
-                System.err.printf("%s", grid[y][x] > 0 ? grid[y][x] : ".");
+                gridString.append(String.format("%s", grid[y][x] > 0 ? grid[y][x] : "."));
             }
-            System.err.println();
+            gridString.append("\n");
         }
+
+        return gridString.toString();
     }
 
     /**
