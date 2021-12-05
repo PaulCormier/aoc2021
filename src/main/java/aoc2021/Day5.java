@@ -34,13 +34,20 @@ public class Day5 {
         int realCount = part1(lines, 1000);
         System.out.printf("There are %d overlapping lines in the real data.%n", realCount);
 
+        // PART 2
+
+        testCount = part2(testLines, 10);
+        System.out.printf("There are %d overlapping lines in the test data.%n", testCount);
+
+        realCount = part2(lines, 1000);
+        System.out.printf("There are %d overlapping lines in the real data.%n", realCount);
     }
 
     /**
      * Read the lines, and plot the horizontal and vertical lines. Then determine
      * how many points overlap at least 2 times.
      * 
-     * @param lines
+     * @param lines The coordinate pairs describing the lines.
      * @return The number of points over which more than two lines overlap.
      */
     private static int part1(final List<Line> lines, int gridSize) {
@@ -65,6 +72,70 @@ public class Day5 {
         }
 
         // Count overlaps
+        int overlaps = countOverlaps(grid);
+
+        return overlaps;
+    }
+
+    /**
+     * Read the lines, and plot all the lines. Then determine
+     * how many points overlap at least 2 times.
+     * 
+     * @param lines The coordinate pairs describing the lines.
+     * @return The number of points over which more than two lines overlap.
+     */
+    private static int part2(final List<Line> lines, int gridSize) {
+        int[][] grid = new int[gridSize][gridSize];
+
+        // Only consider orthogonal lines
+        List<Line> orthogonalLines = lines.stream()
+                                          .filter(l -> l.x1 == l.x2 || l.y1 == l.y2)
+                                          .collect(Collectors.toList());
+
+        // Plot the orthogonal lines
+        for (Line line : orthogonalLines) {
+            // System.err.println(line);
+
+            for (int x = line.x1; x <= line.x2; x++) {
+                for (int y = line.y1; y <= line.y2; y++) {
+                    grid[y][x]++;
+                }
+            }
+            // printGrid(grid);
+            // System.err.println();
+        }
+
+        printGrid(grid);
+        System.err.println();
+
+        // Only consider diagonal lines
+        List<Line> diagonalLines = lines.stream()
+                                        .filter(l -> l.x1 != l.x2 && l.y1 != l.y2)
+                                        .collect(Collectors.toList());
+
+        // Plot the diagonal lines
+        for (Line line : diagonalLines) {
+            // System.err.println(line);
+
+            for (int x = line.x1, y = line.y1; //
+                    x <= line.x2 && ((line.y1 < line.y2 && y <= line.y2)
+                                     || (line.y1 > line.y2 && y >= line.y2)); //
+                    x++, y += (line.y1 < line.y2) ? 1 : -1) {
+                grid[y][x]++;
+            }
+            // printGrid(grid);
+            // System.err.println();
+        }
+
+        printGrid(grid);
+
+        // Count overlaps
+        int overlaps = countOverlaps(grid);
+
+        return overlaps;
+    }
+
+    private static int countOverlaps(int[][] grid) {
         int overlaps = 0;
         for (int y = 0; y < grid.length; y++) {
             for (int x = 0; x < grid[y].length; x++) {
@@ -72,7 +143,6 @@ public class Day5 {
                     overlaps++;
             }
         }
-
         return overlaps;
     }
 
@@ -102,7 +172,7 @@ public class Day5 {
             y2 = Integer.parseInt(pairs[1].split(",")[1]);
 
             // Normalize them so that (x1,y1) is the smaller pair
-            if (x1 > x2 || y1 > y2) {
+            if (x1 > x2 || (x1 == x2 && y1 > y2)) {
                 int temp = x1;
                 x1 = x2;
                 x2 = temp;
