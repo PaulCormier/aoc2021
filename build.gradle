@@ -15,3 +15,30 @@ dependencies {
     
 }
 
+// Create a new DayN.java file from the template.
+tasks.register('newDay', Copy){
+    
+    def targetDir = '/src/main/java/aoc2021/'
+    
+    def nextDay = file(targetDir).listFiles()
+                                 .findAll { it.name ==~ /Day.*.java/ }
+                                 .size() + 1
+                                                 
+    logger.info('Generating Day {}', nextDay);
+
+    from 'src/main/java-templates/Day.java'
+    
+    into targetDir
+    
+    rename { 
+        def fileName = 'Day' + nextDay + '.java';
+        logger.info('New file name: {}', fileName);
+        
+        if(file(targetDir + fileName).exists())
+            throw new GradleException('Destination file "' + fileName + '" already exists!');
+
+        fileName;
+    }
+    
+    expand(day: nextDay)
+}
