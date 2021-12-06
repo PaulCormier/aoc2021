@@ -41,4 +41,18 @@ tasks.register('newDay', Copy){
     }
     
     expand(day: nextDay)
+    
+    // Create input files
+    def resources = 'src/main/resources/'
+    def inputFile = file(resources + 'Input-Day' + nextDay + '.txt')
+    def testInputFile = file(resources + 'TestInput-Day' + nextDay + '.txt')
+    
+    if(inputFile.exists())
+        throw new GradleException('Destination file "' + inputFile + '" already exists!');
+    inputFile.text = ''
+    
+    if(testInputFile.exists())
+        throw new GradleException('Destination file "' + testInputFile + '" already exists!');
+    testInputFile.text = ''
+
 }
