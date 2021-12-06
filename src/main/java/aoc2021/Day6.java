@@ -1,6 +1,8 @@
 package aoc2021;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -59,6 +61,10 @@ public class Day6 {
         log.setLevel(Level.INFO);
 
         part2(lines);
+
+        log.setLevel(Level.DEBUG);
+        test4();
+
     }
 
     private static int part1(final List<Integer> lines) {
@@ -128,6 +134,32 @@ public class Day6 {
     }
 
     /// Things that didn't work:
+
+    private static void test4() {
+        // Count of fish at each timer level
+        LinkedList<Long> fishPopulation = new LinkedList<>(Arrays.asList(0L, 1L, 1L, 2L, 1L, 0L, 0L, 0L, 0L));
+
+        log.debug("Initial state: {}", fishPopulation);
+
+        // Run through the days
+        int days = 256;
+        for (int day = 1; day <= days; day++) {
+
+            // The number of new fish this day.
+            long newFish = fishPopulation.pop();
+
+            // Increase the number of fish which are resetting on 6 next 
+            fishPopulation.set(6, fishPopulation.get(6) + newFish);
+
+            // Add new fish at 8
+            fishPopulation.addLast(newFish);
+
+            if (day <= 18)
+                log.debug("After {} days: {}", String.format("%2d", day), fishPopulation);
+        }
+
+        log.debug("After {} days there are {} fish.", days, fishPopulation.stream().mapToLong(n -> n).sum());
+    }
 
     private static void test3() {
         // Count of fish at each timer level
