@@ -13,7 +13,7 @@ import ch.qos.logback.classic.LoggerContext;
  * @author Paul Cormier
  *
  */
-public class Day${day} {
+public class Day${day}{
 
     private static final Logger log = ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(Day${day}.class);
 
@@ -29,39 +29,31 @@ public class Day${day} {
         List<String> testLines = FileUtils.readFile(TEST_INPUT_TXT);
         log.trace(testLines.toString());
 
-        part1(testLines);
-
-        log.info("");
+        log.info("{}", part1(testLines));
 
         log.setLevel(Level.INFO);
 
         // Read the real file
         List<String> lines = FileUtils.readFile(INPUT_TXT);
 
-        part1(lines);
-
-        log.info("");
+        log.info("{}", part1(lines));
 
         // PART 2
 
         log.setLevel(Level.DEBUG);
 
-        part2(testLines);
-
-        log.info("");
+        log.info("{}", part2(testLines));
 
         log.setLevel(Level.INFO);
 
-        part2(lines);
-
-        log.info("");
+        log.info("{}", part2(lines));
     }
 
-    private static void part1(final List<String> lines) {
+    private static int part1(final List<String> lines) {
 
     }
 
-    private static void part2(final List<String> lines) {
+    private static int part2(final List<String> lines) {
 
     }
 
