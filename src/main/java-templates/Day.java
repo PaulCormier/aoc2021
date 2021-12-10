@@ -51,10 +51,12 @@ public class Day${day}{
 
     private static int part1(final List<String> lines) {
 
+        return -1;
     }
 
     private static int part2(final List<String> lines) {
 
+        return -1;
     }
 
 }
