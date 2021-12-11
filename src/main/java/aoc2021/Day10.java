@@ -1,5 +1,6 @@
 package aoc2021;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -32,24 +33,24 @@ public class Day10 {
         List<String> testLines = FileUtils.readFile(TEST_INPUT_TXT);
         log.trace(testLines.toString());
 
-        log.info("{}", part1(testLines));
+        log.info("The sum of the syntax error scores for the test data is: {}", part1(testLines));
 
         log.setLevel(Level.INFO);
 
         // Read the real file
         List<String> lines = FileUtils.readFile(INPUT_TXT);
 
-        log.info("{}", part1(lines));
+        log.info("The sum of the syntax error scores for the real data is: {}", part1(lines));
 
         // PART 2
 
         log.setLevel(Level.DEBUG);
 
-        log.info("{}", part2(testLines));
+        log.info("The median score of the incomplete lines in the test data: {}", part2(testLines));
 
-        log.setLevel(Level.INFO);
+        // log.setLevel(Level.INFO);
 
-        log.info("{}", part2(lines));
+        log.info("The median score of the incomplete lines in the real data: {}", part2(lines));
     }
 
     /**
@@ -57,7 +58,7 @@ public class Day10 {
      * Then return the sum of those scores.
      * 
      * @param lines
-     *            The input lines.
+     *     The input lines.
      * @return The sum of the syntax error scores.
      */
     private static int part1(final List<String> lines) {
@@ -89,9 +90,53 @@ public class Day10 {
 
     }
 
-    private static int part2(final List<String> lines) {
+    /**
+     * Find and score the incomplete lines
+     * 
+     * @param lines The input lines.
+     * @return The median score of the incomplete lines.
+     */
+    private static long part2(final List<String> lines) {
+        String leftChars = "([{<";
+        Map<Character, Integer> scores = Map.of('(', 1, '[', 2, '{', 3, '<', 4);
+        Map<Character, Character> matchingChars = Map.of(')', '(', ']', '[', '}', '{', '>', '<');
 
-        return -1;
+        long[] completionScores = lines.stream()
+                                       .filter(line -> {
+                                           final Stack<Character> chars = new Stack<>();
+                                           for (char character : line.toCharArray()) {
+                                               if (leftChars.indexOf(character) > -1)
+                                                   chars.push(character);
+                                               else if (!chars.pop().equals(matchingChars.get(character)))
+                                                   return false;
+
+                                           }
+                                           return true;
+                                       })
+                                       .peek(log::debug)
+                                       .mapToLong(line -> {
+                                           final Stack<Character> chars = new Stack<>();
+                                           for (char character : line.toCharArray()) {
+                                               if (leftChars.indexOf(character) > -1)
+                                                   chars.push(character);
+                                               else
+                                                   chars.pop();
+                                           }
+                                           log.debug(chars.toString());
+
+                                           long score = 0;
+                                           Collections.reverse(chars);
+                                           for (char character : chars) {
+                                               score *= 5;
+                                               score += scores.get(character);
+                                           }
+                                           log.debug(Long.toString(score));
+                                           return score;
+                                       })
+                                       .sorted()
+                                       .toArray();
+
+        return completionScores[completionScores.length / 2];
     }
 
 }
