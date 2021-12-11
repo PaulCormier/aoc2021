@@ -59,12 +59,27 @@ public class Day11 {
         // PART 2
 
         log.setLevel(Level.DEBUG);
+        // Reset the grid
+        testOctopuses = testLines.stream()
+                                 .map(l -> l.chars()
+                                            .map(Character::getNumericValue)
+                                            .toArray())
+                                 .collect(Collectors.toList())
+                                 .toArray(new int[10][10]);
 
-        log.info("{}", part2(testLines));
+        log.info("The first time all octopuses flash simultaneously with the test data is step {}.",
+                 part2(testOctopuses));
 
         log.setLevel(Level.INFO);
+        // Reset the grid
+        octopuses = lines.stream()
+                         .map(l -> l.chars()
+                                    .map(Character::getNumericValue)
+                                    .toArray())
+                         .collect(Collectors.toList())
+                         .toArray(new int[10][10]);
 
-        log.info("{}", part2(lines));
+        log.info("The first time all octopuses flash simultaneously with the real data is step {}.", part2(octopuses));
     }
 
     /**
@@ -75,6 +90,7 @@ public class Day11 {
      * @return The number of flashes after a certain number of steps.
      */
     private static int part1(int[][] octopuses, int steps) {
+
         log.debug("Before any steps:\n{}\n", printMap(octopuses));
 
         int flashes = 0;
@@ -132,9 +148,35 @@ public class Day11 {
         return flashes;
     }
 
-    private static int part2(final List<String> lines) {
+    /**
+     * Find the first step when all octopuses flash.
+     * 
+     * @param octopuses The grid of octopuses.
+     * @return The step on which they all flash.
+     */
+    private static int part2(final int[][] octopuses) {
 
-        return -1;
+        log.debug("Before any steps:\n{}\n", printMap(octopuses));
+
+        for (int step = 1;; step++) {
+            // Advance the step
+            for (int i = 0; i < octopuses.length; i++) {
+                for (int j = 0; j < octopuses[i].length; j++) {
+                    if (++octopuses[i][j] > 9) {
+                        // Process flash
+                        processFlash(octopuses, i, j);
+                    }
+
+                }
+            }
+
+            // Count the flashes
+            if (countFlashes(octopuses) == 100) {
+                log.debug("After step {}:\n{}\n", step, printMap(octopuses));
+                return step;
+            }
+        }
+
     }
 
     private static String printMap(final int[][] octopuses) {
