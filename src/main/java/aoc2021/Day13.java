@@ -142,7 +142,7 @@ public class Day13 {
 
             map = foldMap(map, line, horizontal);
 
-            log.debug("Map after {} folds:\n{}", count++, map);
+            log.debug("Map after {} folds:\n{}", count++, printMap(map));
         }
 
         log.info("The final map:\n{}", printMap(map));
