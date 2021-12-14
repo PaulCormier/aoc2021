@@ -61,7 +61,8 @@ public class Day14 {
 
         log.setLevel(Level.INFO);
 
-        //        log.info("After 40 iterations, the difference between the maximum and minimum occurrences of the characters in the real data is: {}.", part2(lines));
+        log.info("After 40 iterations, the difference between the maximum and minimum occurrences of the characters in the real data is: {}.",
+                 part2(rules, POLYMER_TEMPLATE));
     }
 
     /**
@@ -69,9 +70,9 @@ public class Day14 {
      * difference between the most and least common elements.
      * 
      * @param insertionRules
-     *            The map of insertion rules to apply.
+     *     The map of insertion rules to apply.
      * @param polymerTemplate
-     *            The starting point for the polymer.
+     *     The starting point for the polymer.
      * @return The difference between the most and least common elements.
      */
     private static int part1(final Map<String, String> insertionRules, String polymerTemplate) {
@@ -108,19 +109,20 @@ public class Day14 {
      * and the minimum.
      * 
      * @param insertionRules
-     *            The mapping of character pairs to an insertion character.
+     *     The mapping of character pairs to an insertion character.
      * @param polymerTemplate
-     *            The initial string of characters to apply the insertion rules
-     *            to.
+     *     The initial string of characters to apply the insertion rules
+     *     to.
      * @return The difference between the maximum and the minimum occurrences of
-     *         the individual characters.
+     *     the individual characters.
      */
     private static long part2(final Map<String, String> insertionRules, String polymerTemplate) {
 
         int maxChar = insertionRules.keySet().stream().flatMapToInt(String::chars).max().getAsInt();
 
         // Try creating a graph of the pairs, and traversing it for 40 steps deep
-        Map<String, Node> nodeMap = insertionRules.keySet().stream().map(Node::new).collect(Collectors.toMap(n -> n.value, n -> n));
+        Map<String, Node> nodeMap = insertionRules.keySet().stream().map(Node::new)
+                                                  .collect(Collectors.toMap(n -> n.value, n -> n));
         insertionRules.entrySet().forEach(e -> {
             String key = e.getKey();
             String common = e.getValue();
@@ -134,7 +136,8 @@ public class Day14 {
 
         log.debug("Node map:\n{}", nodeMap.values().stream().map(Node::toString).collect(Collectors.joining("\n")));
 
-        // For each starting pair, traverse the graph and count the instances of each character.
+        // For each starting pair, traverse the graph and count the instances of each
+        // character.
 
         char[] chars = polymerTemplate.toCharArray();
         List<Node> startingNodes = new ArrayList<>();
@@ -186,8 +189,10 @@ public class Day14 {
         counts.put(fromNode.common, 1L);
 
         if (depth > 0) {
-            countChars(fromNode.left, depth - 1).entrySet().forEach(e -> counts.merge(e.getKey(), e.getValue(), Math::addExact));
-            countChars(fromNode.right, depth - 1).entrySet().forEach(e -> counts.merge(e.getKey(), e.getValue(), Math::addExact));
+            countChars(fromNode.left, depth - 1).entrySet()
+                                                .forEach(e -> counts.merge(e.getKey(), e.getValue(), Math::addExact));
+            countChars(fromNode.right, depth - 1).entrySet()
+                                                 .forEach(e -> counts.merge(e.getKey(), e.getValue(), Math::addExact));
         }
 
         return counts;
