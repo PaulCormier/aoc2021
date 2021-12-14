@@ -1,6 +1,7 @@
 package aoc2021;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,7 +123,7 @@ public class Day14 {
             String key = e.getKey();
             String common = e.getValue();
             Node root = nodeMap.computeIfAbsent(key, Node::new);
-            root.common = common;
+            root.common = common.charAt(0);
             root.left = nodeMap.computeIfAbsent(key.charAt(0) + common, Node::new);
             root.right = nodeMap.computeIfAbsent(common + key.charAt(1), Node::new);
         });
@@ -130,10 +131,6 @@ public class Day14 {
         log.debug("Node map:\n{}", nodeMap.values().stream().map(Node::toString).collect(Collectors.joining("\n")));
 
         // For each starting pair, traverse the graph and count the instances of each character.
-        Map<Character, Long> counts = new HashMap<>();
-
-        // Start with the last character already in the map.
-        counts.put(polymerTemplate.charAt(polymerTemplate.length() - 1), 1L);
 
         char[] chars = polymerTemplate.toCharArray();
         List<Node> startingNodes = new ArrayList<>();
@@ -143,9 +140,34 @@ public class Day14 {
 
         log.debug("Starting nodes: {}", startingNodes.stream().map(n -> n.value).collect(Collectors.joining(", ")));
 
+        Map<Character, Long> counts = new HashMap<>();
+
+        /*
+        // Start with the characters in the polymer template.
+        polymerTemplate.chars().forEach(c -> counts.put((char) c, counts.getOrDefault((char) c, 0L) + 1));
+        
         startingNodes.stream()
+                     .peek(n -> log.debug(n.toString()))
                      .flatMap(n -> countChars(n, 39).entrySet().stream())
                      .forEach(e -> counts.merge(e.getKey(), e.getValue(), Math::addExact));
+        */
+
+        int maxChar = nodeMap.values().stream().mapToInt(n -> n.common).max().getAsInt();
+        long[] countsLight = new long[maxChar + 1];
+
+        // Start with the characters in the polymer template.
+        polymerTemplate.chars().forEach(c -> countsLight[c]++);
+
+        startingNodes.forEach(startingNode -> {
+            log.debug(startingNode.toString());
+            countChars(startingNode, 39, countsLight);
+        });
+
+        // Convert the array back to a map
+        for (int i = 0; i < countsLight.length; i++) {
+            if (countsLight[i] > 0)
+                counts.put((char) i, countsLight[i]);
+        }
 
         log.debug("Counts:\n{}", counts);
 
@@ -158,30 +180,32 @@ public class Day14 {
     private static Map<Character, Long> countChars(Node fromNode, int depth) {
 
         Map<Character, Long> counts = new HashMap<>();
+        counts.put(fromNode.common, 1L);
 
         if (depth > 0) {
             countChars(fromNode.left, depth - 1).entrySet().forEach(e -> counts.merge(e.getKey(), e.getValue(), Math::addExact));
             countChars(fromNode.right, depth - 1).entrySet().forEach(e -> counts.merge(e.getKey(), e.getValue(), Math::addExact));
-        } else if (depth == 0) {
-
-            char leftChar = fromNode.value.charAt(0);
-            char commonChar = fromNode.common.charAt(0);
-            if (leftChar == commonChar) {
-                counts.put(leftChar, 2L);
-            } else {
-                counts.put(leftChar, 1L);
-                counts.put(commonChar, 1L);
-            }
         }
 
         return counts;
+    }
+
+    private static void countChars(Node fromNode, int depth, long[] counts) {
+
+        counts[fromNode.common]++;
+
+        if (depth > 0) {
+            countChars(fromNode.left, depth - 1, counts);
+            countChars(fromNode.right, depth - 1, counts);
+        }
+
     }
 
     private static class Node {
         String value;
         Node left;
         Node right;
-        String common;
+        char common;
 
         Node(String value) {
             this.value = value;
