@@ -117,6 +117,8 @@ public class Day14 {
      */
     private static long part2(final Map<String, String> insertionRules, String polymerTemplate) {
 
+        int maxChar = insertionRules.keySet().stream().flatMapToInt(String::chars).max().getAsInt();
+
         // Try creating a graph of the pairs, and traversing it for 40 steps deep
         Map<String, Node> nodeMap = insertionRules.keySet().stream().map(Node::new).collect(Collectors.toMap(n -> n.value, n -> n));
         insertionRules.entrySet().forEach(e -> {
@@ -126,6 +128,8 @@ public class Day14 {
             root.common = common.charAt(0);
             root.left = nodeMap.computeIfAbsent(key.charAt(0) + common, Node::new);
             root.right = nodeMap.computeIfAbsent(common + key.charAt(1), Node::new);
+
+            root.childNodeCounts = new long[50][maxChar + 1];
         });
 
         log.debug("Node map:\n{}", nodeMap.values().stream().map(Node::toString).collect(Collectors.joining("\n")));
@@ -152,7 +156,6 @@ public class Day14 {
                      .forEach(e -> counts.merge(e.getKey(), e.getValue(), Math::addExact));
         */
 
-        int maxChar = nodeMap.values().stream().mapToInt(n -> n.common).max().getAsInt();
         long[] countsLight = new long[maxChar + 1];
 
         // Start with the characters in the polymer template.
@@ -192,13 +195,22 @@ public class Day14 {
 
     private static void countChars(Node fromNode, int depth, long[] counts) {
 
-        counts[fromNode.common]++;
-
         if (depth > 0) {
-            countChars(fromNode.left, depth - 1, counts);
-            countChars(fromNode.right, depth - 1, counts);
+            long[] tempCounts = new long[counts.length];
+            if (fromNode.hasCounts[depth]) {
+                tempCounts = fromNode.childNodeCounts[depth];
+            } else {
+                countChars(fromNode.left, depth - 1, tempCounts);
+                countChars(fromNode.right, depth - 1, tempCounts);
+                fromNode.childNodeCounts[depth] = tempCounts;
+                fromNode.hasCounts[depth] = true;
+            }
+            for (int i = 0; i < tempCounts.length; i++) {
+                counts[i] += tempCounts[i];
+            }
         }
 
+        counts[fromNode.common]++;
     }
 
     private static class Node {
@@ -206,6 +218,10 @@ public class Day14 {
         Node left;
         Node right;
         char common;
+
+        long[][] childNodeCounts;
+
+        boolean[] hasCounts = new boolean[50];
 
         Node(String value) {
             this.value = value;
