@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
@@ -50,11 +51,12 @@ public class Day16 {
 
         log.setLevel(Level.DEBUG);
 
-        log.info("{}", part2(testLines));
+        for (String line : testLines)
+            log.info("The value of {} is: {}", line, part2(line));
 
         log.setLevel(Level.INFO);
 
-        log.info("{}", part2(lines));
+        log.info("The value of the real data packet is: {}", part2(lines.get(0)));
     }
 
     /**
@@ -90,9 +92,17 @@ public class Day16 {
         return versionSum;
     }
 
-    private static int part2(final List<String> lines) {
+    private static long part2(final String inputLine) {
 
-        return -1;
+        // Convert to binary
+        String bits = inputLine.chars()
+                               .mapToObj(ch -> Integer.toBinaryString(Character.getNumericValue(ch)))
+                               .map(s -> StringUtils.leftPad(s, 4, '0'))
+                               .collect(Collectors.joining());
+
+        Packet packet = new Packet(bits);
+
+        return packet.getValue();
     }
 
     private static class Packet {
@@ -161,6 +171,47 @@ public class Day16 {
                 }
             }
 
+        }
+
+        long getValue() {
+
+            LongStream subPacketValues = this.subPackets.stream().mapToLong(Packet::getValue);
+
+            switch (this.type) {
+                case 0:
+                    // Sum
+                    this.value = subPacketValues.sum();
+                    break;
+                case 1:
+                    // Product
+                    this.value = subPacketValues.reduce(Math::multiplyExact).getAsLong();
+                    break;
+                case 2:
+                    // Min
+                    this.value = subPacketValues.min().getAsLong();
+                    break;
+                case 3:
+                    // Max
+                    this.value = subPacketValues.max().getAsLong();
+                    break;
+                case 4:
+                    // Already computed
+                    break;
+                case 5:
+                    // Greater than
+                    this.value = subPacketValues.reduce(Math::subtractExact).getAsLong() > 0 ? 1 : 0;
+                    break;
+                case 6:
+                    // Less than
+                    this.value = subPacketValues.reduce(Math::subtractExact).getAsLong() < 0 ? 1 : 0;
+                    break;
+                case 7:
+                    // Equal to
+                    this.value = subPacketValues.reduce(Math::subtractExact).getAsLong() == 0 ? 1 : 0;
+                    break;
+            }
+
+            return this.value;
         }
 
         @Override
