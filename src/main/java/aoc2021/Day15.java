@@ -1,7 +1,13 @@
 package aoc2021;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.Stack;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -117,12 +123,14 @@ public class Day15 {
         // log.debug("New map:\n{}", printMap(bigMap));
 
         // log.setLevel(Level.INFO);
-        int[][] minScores = new int[bigMap.length][bigMap[0].length];
-        int minScore = traverseFrom(0, 0, bigMap, 0, minScores, new Stack<int[]>())
-                       - bigMap[0][0];
-        log.debug(printMap(minScores, ","));
+        // int[][] minScores = new int[bigMap.length][bigMap[0].length];
+        // int minScore = traverseFrom(0, 0, bigMap, 0, minScores, new Stack<int[]>())
+        // - bigMap[0][0];
+        // log.debug(printMap(minScores, ","));
+        //
+        // return minScore;
 
-        return minScore;
+        return dijkstra(bigMap);
 
     }
 
@@ -310,24 +318,24 @@ public class Day15 {
             log.debug("Path: {}", visited.stream().map(Arrays::toString).collect(Collectors.joining("->")));
             return score;
         }
-        if(depth==0) {
+        if (depth == 0) {
             return score;
         }
 
         // Try going right
         int rightScore = 1_000_000;
         if (x + 1 < map[y].length && !visited.contains(new int[] { x + 1, y }))
-            rightScore =  traverseFrom(x + 1, y, map, minScores, visited, depth - 1);
+            rightScore = traverseFrom(x + 1, y, map, minScores, visited, depth - 1);
 
         // Try going down
         int downScore = 1_000_000;
         if (y + 1 < map.length && !visited.contains(new int[] { x, y + 1 }))
-            downScore =  traverseFrom(x, y + 1, map, minScores, visited, depth - 1);
+            downScore = traverseFrom(x, y + 1, map, minScores, visited, depth - 1);
 
         // What about up, or left?
         int upScore = 1_000_000;
         if (y - 1 > 0 && !visited.contains(new int[] { x, y - 1 }))
-            upScore =  traverseFrom(x, y - 1, map, minScores, visited, depth - 1);
+            upScore = traverseFrom(x, y - 1, map, minScores, visited, depth - 1);
 
         int leftScore = 1_000_000;
         if (x - 1 > 0 && !visited.contains(new int[] { x - 1, y }))
@@ -340,6 +348,129 @@ public class Day15 {
         visited.pop();
 
         return score;
+    }
+
+    /** Dijkstra's algorithm **/
+    private static int dijkstra(int[][] map) {
+        // Convert the map to a graph of nodes.
+        Node start = new Node(map[0][0]);
+        start.distance = 0;
+        Node end = new Node(map[map.length - 1][map[0].length - 1]);
+
+        Map<Pair, Node> graph = new HashMap<>();
+        graph.put(new Pair(0, 0), start);
+        graph.put(new Pair(map.length - 1, map[0].length - 1), end);
+        for (int y = 0; y < map.length; y++) {
+            for (int x = 0; x < map[y].length; x++) {
+                Function<? super Pair, ? extends Node> newNode = p -> new Node(map[p.y][p.x]);
+                Node node = graph.computeIfAbsent(new Pair(x, y), newNode);
+                if (x + 1 < map[y].length)
+                    node.neighbours.add(graph.computeIfAbsent(new Pair(x + 1, y), newNode));
+
+                if (y + 1 < map.length)
+                    node.neighbours.add(graph.computeIfAbsent(new Pair(x, y + 1), newNode));
+
+                if (y - 1 > 0)
+                    node.neighbours.add(graph.computeIfAbsent(new Pair(x, y - 1), newNode));
+
+                if (x - 1 > 0)
+                    node.neighbours.add(graph.computeIfAbsent(new Pair(x - 1, y), newNode));
+            }
+        }
+
+        PriorityQueue<Node> unvisited = new PriorityQueue<>((n1, n2) -> n1.distance - n2.distance);
+        graph.values().forEach(unvisited::add);
+        // Map<Node, Integer> distance = new HashMap<>();
+        Map<Node, Node> predecessor = new HashMap<>();
+
+        // Visit all nodes
+        while (unvisited.size() > 0) {
+            Node bestVertex = unvisited.poll();
+
+            for (Node neighbour : bestVertex.neighbours) {
+                if (unvisited.contains(neighbour)) {
+                    int distance = bestVertex.distance + neighbour.value;
+                    if (distance < neighbour.distance) {
+                        neighbour.distance = distance;
+                        // Re-prioritize unvisited.
+                        unvisited.remove(neighbour);
+                        unvisited.add(neighbour);
+                        predecessor.put(neighbour, bestVertex);
+                    }
+                }
+            }
+        }
+
+        // Find the shortest path
+        Stack<Node> path = new Stack<>();
+        Node next = end;
+        while (predecessor.containsKey(next)) {
+            path.push(next);
+            next = predecessor.get(next);
+        }
+
+        log.debug("Path: {}", path);
+
+        return end.distance;
+    }
+
+    private static class Node {
+        int value;
+        /** The distance from the start. */
+        int distance;
+
+        Set<Node> neighbours;
+
+        Node(int value) {
+            this.value = value;
+            this.distance = 1_000_000;
+            this.neighbours = new HashSet<>();
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%d (%d)", value, distance);
+        }
+    }
+
+    static class Pair {
+        int x;
+        int y;
+
+        public Pair(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + x;
+            result = prime * result + y;
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            Pair other = (Pair) obj;
+            if (x != other.x)
+                return false;
+            if (y != other.y)
+                return false;
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("(%d,%d)", x, y);
+        }
     }
 
     private static String printMap(int[][] map) {
