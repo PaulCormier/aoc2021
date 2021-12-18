@@ -27,8 +27,6 @@ public class Day18 {
 
     public static void main(String[] args) {
 
-        log.setLevel(Level.DEBUG);
-
         // Read the test file (it has three sets of data)
         List<String> testLines = Arrays.asList(FileUtils.readFileToStream(TEST_INPUT_TXT)
                                                         .collect(Collectors.joining(" "))
@@ -38,30 +36,36 @@ public class Day18 {
         log.debug("Test parsing");
         Arrays.stream(testLines.get(0).split(" ")).forEach(l -> log.debug("{} -> {}", l, new Pair(l)));
 
-        log.debug("Test reduction");
+        log.setLevel(Level.TRACE);
+        log.trace("Test reduction");
         Arrays.stream(testLines.get(1).split(" "))
               .forEach(l -> {
                   Pair pair = new Pair(l);
-                  log.debug("{}", pair);
+                  log.trace("{}", pair);
                   while (pair.reduce(0))
-                      log.debug("becomes {}", pair);
+                      log.trace("becomes {}", pair);
               });
 
-        log.debug("Test magnitude");
+        log.trace("Test magnitude");
         Arrays.stream(testLines.get(2).split(" "))
-              .forEach(l -> log.debug("{} becomes {}.", l, new Pair(l).getMagnitude()));
+              .forEach(l -> log.trace("{} becomes {}.", l, new Pair(l).getMagnitude()));
 
+        log.trace("Test sums");
         // log.info("The magnitude of the sum of the test data is: {}",
         // part1(Arrays.asList(testLines.get(3).split(" "))));
-        // log.info("The magnitude of the sum of the test data is: {}",
-        // part1(Arrays.asList(testLines.get(4).split(" "))));
+        part1(Arrays.asList(testLines.get(4).split(" ")));
+        part1(Arrays.asList(testLines.get(5).split(" ")));
+
+        log.setLevel(Level.DEBUG);
+        log.info("The magnitude of the sum of the test data is: {}", part1(Arrays.asList(testLines.get(6).split(" "))));
+        log.info("The magnitude of the sum of the test data is: {}", part1(Arrays.asList(testLines.get(7).split(" "))));
 
         log.setLevel(Level.INFO);
 
         // Read the real file
         List<String> lines = FileUtils.readFile(INPUT_TXT);
 
-        log.info("The magnitude of the sum of the real data is: {}", part1(lines));
+        // log.info("The magnitude of the sum of the real data is: {}", part1(lines));
 
         // PART 2
 
@@ -94,8 +98,11 @@ public class Day18 {
             log.debug("+ {}", nextPair);
 
             Pair sum = new Pair(currentPair, nextPair);
+
+            log.trace("{}", sum);
             while (sum.reduce(0))
-                ;
+                log.trace("becomes {}", sum);
+
             currentPair = sum;
 
             log.debug("= {}", currentPair);
@@ -170,6 +177,8 @@ public class Day18 {
         Pair(Pair left, Pair right) {
             this.left = left;
             this.right = right;
+            this.left.parent = this;
+            this.right.parent = this;
         }
 
         boolean reduce(int level) {
@@ -198,7 +207,7 @@ public class Day18 {
          * entire exploding pair is replaced with the regular number 0.
          */
         void explode() {
-            log.debug("Explode: {}", this);
+            log.trace("Explode: {}", this);
             Pair parentLeftRegularNumber = parent;
             // Check the left side
             while (parentLeftRegularNumber != null) {
@@ -211,21 +220,34 @@ public class Day18 {
 
             // Find parent with a right value
             Pair parentRightRegularNumber = parent;
-            while (parentRightRegularNumber.parent != null
-                   && !parentRightRegularNumber.right.isRegularNumber()) {
-                parentRightRegularNumber = parentRightRegularNumber.parent;
-            }
-            if (parentRightRegularNumber.right.isRegularNumber()) {
-                parentRightRegularNumber.right.value += this.right.value;
-            }
-            // At the top?
-            else if (parentRightRegularNumber.parent == null) {
-                parentRightRegularNumber = parentRightRegularNumber.right;
-                // Find the first left regular number
-                while (!parentRightRegularNumber.left.isRegularNumber())
-                    parentRightRegularNumber = parentRightRegularNumber.left;
+            Pair previousPair = this;
+            while (parentRightRegularNumber != null
+                   && !parentRightRegularNumber.right.isRegularNumber()
+                   && parentRightRegularNumber.left != previousPair) {
 
-                parentRightRegularNumber.left.value += this.right.value;
+                // if (parentRightRegularNumber != null
+                // && parentRightRegularNumber.parent != null
+                // && parentRightRegularNumber.parent.left == parentRightRegularNumber) {
+                // parentRightRegularNumber = parentRightRegularNumber.parent;
+                // break;
+                // }
+
+                previousPair = parentRightRegularNumber;
+                parentRightRegularNumber = parentRightRegularNumber.parent;
+
+            }
+            // At the top
+            if (parentRightRegularNumber != null) {
+                if (parentRightRegularNumber.right.isRegularNumber()) {
+                    parentRightRegularNumber.right.value += this.right.value;
+                } else {
+                    parentRightRegularNumber = parentRightRegularNumber.right;
+                    // Find the first left regular number
+                    while (!parentRightRegularNumber.left.isRegularNumber())
+                        parentRightRegularNumber = parentRightRegularNumber.left;
+
+                    parentRightRegularNumber.left.value += this.right.value;
+                }
             }
 
             // Replace itself with 0.
@@ -243,11 +265,11 @@ public class Day18 {
          * rounded up.
          */
         void split() {
-            log.debug("Split: {}", this);
+            log.trace("Split: {}", this);
 
             Pair newPair = new Pair(parent, 0);
-            newPair.left = new Pair(newPair.left, value / 2);
-            newPair.right = new Pair(newPair.right, (value + 1) / 2);
+            newPair.left = new Pair(newPair, value / 2);
+            newPair.right = new Pair(newPair, (value + 1) / 2);
 
             if (this.parent.left == this)
                 this.parent.left = newPair;
