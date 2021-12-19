@@ -39,7 +39,8 @@ public class Day19 {
                                                         .split("  "));
         log.trace(testLines.toString());
 
-        log.info("There are {} beacons in the test map.", part1(testLines).beacons.size());
+        Map3D testMap = part1(testLines);
+        log.info("There are {} beacons in the test map.", testMap.beacons.size());
 
         // log.setLevel(Level.INFO);
 
@@ -49,19 +50,18 @@ public class Day19 {
                                                     .collect(Collectors.joining(" "))
                                                     .split("  "));
 
-        // log.info("There are {} beacons in the real map.",
-        // part1(lines).beacons.size());
+        Map3D realMap = part1(lines);
+        log.info("There are {} beacons in the real map.", realMap.beacons.size());
 
         // PART 2
 
-        log.setLevel(Level.DEBUG);
+        log.setLevel(Level.TRACE);
 
-        log.info("The largest Manhattan distance between any two scanners in the test data is: {}", part2(testLines));
+        log.info("The largest Manhattan distance between any two scanners in the test data is: {}", part2(testMap));
 
         log.setLevel(Level.INFO);
 
-        // log.info("The largest Manhattan distance between any two scanners in the real
-        // data is: {}", part2(lines));
+        log.info("The largest Manhattan distance between any two scanners in the real data is: {}", part2(realMap));
     }
 
     /**
@@ -131,12 +131,26 @@ public class Day19 {
      * Do the same thing as part 1, but keep track of the scanner locations, then
      * compute the Manhattan distance between each one. Find the maximum.
      * 
-     * @param lines The coordinates of the beacons as seen by each scanner.
+     * @param oceanMap The coordinates of all beacons and scanners.
      * @return The maximum Manhattan distance between the scanners.
      */
-    private static int part2(final List<String> lines) {
+    private static int part2(final Map3D oceanMap) {
 
-        return -1;
+        // Find the Manhattan distance between each scanner
+        log.trace("Scanners: {}", oceanMap.scanners);
+
+        int maxManhattanDistance = 0;
+        for (Point3D scanner1 : oceanMap.scanners) {
+            for (Point3D scanner2 : oceanMap.scanners) {
+                int manhattanDistance = Math.abs(scanner1.x - scanner2.x) +
+                                        Math.abs(scanner1.y - scanner2.y) +
+                                        Math.abs(scanner1.z - scanner2.z);
+                if (manhattanDistance > maxManhattanDistance)
+                    maxManhattanDistance = manhattanDistance;
+            }
+        }
+
+        return maxManhattanDistance;
     }
 
     private static Map3D scanMaps(Map3D baseMap, List<Map3D> scannerMaps,
@@ -215,7 +229,6 @@ public class Day19 {
                     Map3D translatedMap = new Map3D(scannerMap.beacons.stream().map(Point3D::copy)
                                                                       .collect(Collectors.toSet()));
                     // Translate the coordinates
-                    // translatedMap.stream().forEach(p -> p.translate(transX, transY, transZ));
                     translatedMap.translate(transX, transY, transZ);
                     // log.debug("Translated points: {} and {}.", candidatePoint1, candidatePoint2);
 
@@ -225,6 +238,7 @@ public class Day19 {
                     log.trace("There are {} points in common: {}", intersection.size(), intersection);
 
                     if (intersection.size() >= 12) {
+                        log.debug("Translated map to: {}", translatedMap.primaryScannerLocation);
                         return translatedMap;
                     }
                 }
@@ -352,13 +366,11 @@ public class Day19 {
         }
 
         void translate(int x, int y, int z) {
-            primaryScannerLocation.translate(x, y, z);
             beacons.forEach(p -> p.translate(x, y, z));
             scanners.forEach(p -> p.translate(x, y, z));
         }
 
         void rotate(int x, int y, int z) {
-            primaryScannerLocation.rotate(x, y, z);
             beacons.forEach(p -> p.rotate(x, y, z));
             scanners.forEach(p -> p.rotate(x, y, z));
         }
