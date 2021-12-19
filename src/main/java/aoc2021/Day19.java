@@ -2,6 +2,7 @@ package aoc2021;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,7 +39,7 @@ public class Day19 {
                                                         .split("  "));
         log.trace(testLines.toString());
 
-        log.info("There are {} beacons in the test map.", part1(testLines));
+        log.info("There are {} beacons in the test map.", part1(testLines).beacons.size());
 
         // log.setLevel(Level.INFO);
 
@@ -48,17 +49,19 @@ public class Day19 {
                                                     .collect(Collectors.joining(" "))
                                                     .split("  "));
 
-        log.info("There are {} beacons in the real map.", part1(lines));
+        // log.info("There are {} beacons in the real map.",
+        // part1(lines).beacons.size());
 
         // PART 2
 
         log.setLevel(Level.DEBUG);
 
-        log.info("{}", part2(testLines));
+        log.info("The largest Manhattan distance between any two scanners in the test data is: {}", part2(testLines));
 
         log.setLevel(Level.INFO);
 
-        log.info("{}", part2(lines));
+        // log.info("The largest Manhattan distance between any two scanners in the real
+        // data is: {}", part2(lines));
     }
 
     /**
@@ -68,19 +71,20 @@ public class Day19 {
      * @param lines The coordinates of the beacons as seen by each scanner.
      * @return The number of beacons in the complete map.
      */
-    private static int part1(final List<String> lines) {
+    private static Map3D part1(final List<String> lines) {
 
         // Parse the points into maps
-        List<Set<Point3D>> scannerMaps = lines.stream()
-                                              .map(map -> Arrays.stream(map.split(" "))
-                                                                .map(line -> line.split(","))
-                                                                .map(coordinates -> new Point3D(Integer.parseInt(coordinates[0]),
-                                                                                                Integer.parseInt(coordinates[1]),
-                                                                                                Integer.parseInt(coordinates[2])))
-                                                                .collect(Collectors.toSet()))
-                                              .collect(Collectors.toList());
+        List<Map3D> scannerMaps = lines.stream()
+                                       .map(map -> Arrays.stream(map.split(" "))
+                                                         .map(line -> line.split(","))
+                                                         .map(coordinates -> new Point3D(Integer.parseInt(coordinates[0]),
+                                                                                         Integer.parseInt(coordinates[1]),
+                                                                                         Integer.parseInt(coordinates[2])))
+                                                         .collect(Collectors.toSet()))
+                                       .map(Map3D::new)
+                                       .collect(Collectors.toList());
 
-        Set<Point3D> baseMap = scannerMaps.remove(0);
+        Map3D baseMap = scannerMaps.remove(0);
 
         log.trace(baseMap.toString());
 
@@ -89,10 +93,10 @@ public class Day19 {
             log.debug("There are {} maps remaining to be checked.", scannerMaps.size());
 
             // Start with two points in the base map, find their deltas
-            Set<Point3D> matchingMap = null;
+            Map3D matchingMap = null;
             nextMap: //
-            for (Point3D point1 : baseMap) {
-                for (Point3D point2 : baseMap) {
+            for (Point3D point1 : baseMap.beacons) {
+                for (Point3D point2 : baseMap.beacons) {
                     if (point1.equals(point2))
                         continue;
 
@@ -120,44 +124,52 @@ public class Day19 {
             }
         }
 
-        return baseMap.size();
+        return baseMap;
     }
 
+    /**
+     * Do the same thing as part 1, but keep track of the scanner locations, then
+     * compute the Manhattan distance between each one. Find the maximum.
+     * 
+     * @param lines The coordinates of the beacons as seen by each scanner.
+     * @return The maximum Manhattan distance between the scanners.
+     */
     private static int part2(final List<String> lines) {
 
         return -1;
     }
 
-    private static Set<Point3D> scanMaps(Set<Point3D> baseMap, List<Set<Point3D>> scannerMaps,
-                                         Point3D point1, int deltaX, int deltaY, int deltaZ) {
+    private static Map3D scanMaps(Map3D baseMap, List<Map3D> scannerMaps,
+                                  Point3D point1, int deltaX, int deltaY, int deltaZ) {
 
         int mapNum = 1;
         // Try to find a matching pair in another map
-        for (Set<Point3D> scannerMap : scannerMaps) {
+        for (Map3D scannerMap : scannerMaps) {
 
             // Copy the map
 
-            Set<Point3D> rotatedMap = scannerMap.stream().map(Point3D::copy)
-                                                .collect(Collectors.toSet());
+            Map3D rotatedMap = new Map3D(scannerMap.beacons.stream().map(Point3D::copy)
+                                                           .collect(Collectors.toSet()));
 
             // Go through the rotations
             for (int x = 0; x < 4; x++) {
-                for (Point3D point : rotatedMap)
-                    point.rotate(1, 0, 0);
+                // for (Point3D point : rotatedMap)
+                rotatedMap.rotate(1, 0, 0);
                 for (int y = 0; y < 4; y++) {
-                    for (Point3D point : rotatedMap)
-                        point.rotate(0, 1, 0);
+                    // for (Point3D point : rotatedMap)
+                    rotatedMap.rotate(0, 1, 0);
                     for (int z = 0; z < 4; z++) {
-                        for (Point3D point : rotatedMap)
-                            point.rotate(0, 0, 1);
+                        // for (Point3D point : rotatedMap)
+                        rotatedMap.rotate(0, 0, 1);
 
                         // If it matches, add it to the main map
                         // and remove it from the set of maps to check
-                        Set<Point3D> foundMap = findInMap(baseMap, rotatedMap, point1, deltaX, deltaY,
-                                                          deltaZ);
+                        Map3D foundMap = findInMap(baseMap, rotatedMap, point1,
+                                                   deltaX, deltaY, deltaZ);
                         if (foundMap != null) {
                             log.debug("Found a match in map {}", mapNum);
-                            baseMap.addAll(foundMap);
+                            baseMap.beacons.addAll(foundMap.beacons);
+                            baseMap.scanners.add(foundMap.primaryScannerLocation);
                             return scannerMap;
                         }
                     }
@@ -169,12 +181,12 @@ public class Day19 {
         return null;
     }
 
-    private static Set<Point3D> findInMap(Set<Point3D> baseMap, Set<Point3D> scannerMap,
-                                          Point3D point1, int deltaX, int deltaY, int deltaZ) {
+    private static Map3D findInMap(Map3D baseMap, Map3D scannerMap,
+                                   Point3D point1, int deltaX, int deltaY, int deltaZ) {
 
         // Try to find a matching pair in another map
-        for (Point3D candidatePoint1 : scannerMap) {
-            for (Point3D candidatePoint2 : scannerMap) {
+        for (Point3D candidatePoint1 : scannerMap.beacons) {
+            for (Point3D candidatePoint2 : scannerMap.beacons) {
                 if (candidatePoint1.equals(candidatePoint2))
                     continue;
 
@@ -200,14 +212,16 @@ public class Day19 {
                     log.trace("The translation between the two spaces is: ({},{},{}).", transX, transY, transZ);
 
                     // Maybe take a copy of the map?
-                    Set<Point3D> translatedMap = scannerMap.stream().map(Point3D::copy)
-                                                           .collect(Collectors.toSet());
+                    Map3D translatedMap = new Map3D(scannerMap.beacons.stream().map(Point3D::copy)
+                                                                      .collect(Collectors.toSet()));
                     // Translate the coordinates
-                    translatedMap.stream().forEach(p -> p.translate(transX, transY, transZ));
+                    // translatedMap.stream().forEach(p -> p.translate(transX, transY, transZ));
+                    translatedMap.translate(transX, transY, transZ);
                     // log.debug("Translated points: {} and {}.", candidatePoint1, candidatePoint2);
 
                     // Are the at least 12 matching points?
-                    Collection<Point3D> intersection = CollectionUtils.intersection(baseMap, translatedMap);
+                    Collection<Point3D> intersection = CollectionUtils.intersection(baseMap.beacons,
+                                                                                    translatedMap.beacons);
                     log.trace("There are {} points in common: {}", intersection.size(), intersection);
 
                     if (intersection.size() >= 12) {
@@ -320,6 +334,34 @@ public class Day19 {
             return String.format("(%d,%d,%d)", x, y, z);
         }
 
+    }
+
+    /**
+     * A representation of a map of beacon point seen by a scanner.
+     */
+    static class Map3D {
+        Point3D primaryScannerLocation;
+        Set<Point3D> beacons;
+        Set<Point3D> scanners;
+
+        Map3D(Set<Point3D> points) {
+            this.beacons = points;
+            this.primaryScannerLocation = new Point3D(0, 0, 0);
+            this.scanners = new HashSet<>();
+            this.scanners.add(primaryScannerLocation);
+        }
+
+        void translate(int x, int y, int z) {
+            primaryScannerLocation.translate(x, y, z);
+            beacons.forEach(p -> p.translate(x, y, z));
+            scanners.forEach(p -> p.translate(x, y, z));
+        }
+
+        void rotate(int x, int y, int z) {
+            primaryScannerLocation.rotate(x, y, z);
+            beacons.forEach(p -> p.rotate(x, y, z));
+            scanners.forEach(p -> p.rotate(x, y, z));
+        }
     }
 
 }
