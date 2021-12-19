@@ -1,6 +1,8 @@
 package aoc2021;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -71,11 +73,13 @@ public class Day18 {
 
         log.setLevel(Level.DEBUG);
 
-        log.info("{}", part2(testLines));
+        log.info("the largest magnitude of any sum of two different snailfish numbers in the test data is: {}",
+                 part2(Arrays.asList(testLines.get(7).split(" "))));
 
         log.setLevel(Level.INFO);
 
-        log.info("{}", part2(lines));
+        log.info("the largest magnitude of any sum of two different snailfish numbers in the test data is: {}",
+                 part2(lines));
     }
 
     /**
@@ -113,9 +117,40 @@ public class Day18 {
         return currentPair.getMagnitude();
     }
 
+    /**
+     * Find the largest magnitude of any pair of snailfish numbers.
+     * 
+     * @param lines The snailfish numbers to be summed.
+     * @return The magnitude of the largest sum of two snailfish numbers.
+     */
     private static int part2(final List<String> lines) {
 
-        return -1;
+        List<Pair> sums = new ArrayList<>();
+
+        for (String firstLine : lines) {
+            for (String secondLine : lines) {
+                if (firstLine.equals(secondLine))
+                    continue;
+
+                Pair firstPair = new Pair(firstLine);
+                Pair secondPair = new Pair(secondLine);
+
+                Pair sum = new Pair(firstPair, secondPair);
+
+                log.trace("{}", sum);
+                while (sum.reduce(0, true) || sum.reduce(0, false))
+                    log.trace("becomes {}", sum);
+                log.debug("= {}", sum);
+
+                sums.add(sum);
+            }
+        }
+
+        Pair maxSum = sums.stream().max(Comparator.comparing(Pair::getMagnitude)).get();
+
+        log.debug("The final sum is: {}", maxSum);
+
+        return maxSum.getMagnitude();
     }
 
     private static class Pair {
