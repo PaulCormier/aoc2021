@@ -36,13 +36,13 @@ public class Day18 {
         log.debug("Test parsing");
         Arrays.stream(testLines.get(0).split(" ")).forEach(l -> log.debug("{} -> {}", l, new Pair(l)));
 
-        log.setLevel(Level.TRACE);
+        // log.setLevel(Level.TRACE);
         log.trace("Test reduction");
         Arrays.stream(testLines.get(1).split(" "))
               .forEach(l -> {
                   Pair pair = new Pair(l);
                   log.trace("{}", pair);
-                  while (pair.reduce(0))
+                  while (pair.reduce(0, true) || pair.reduce(0, false))
                       log.trace("becomes {}", pair);
               });
 
@@ -65,7 +65,7 @@ public class Day18 {
         // Read the real file
         List<String> lines = FileUtils.readFile(INPUT_TXT);
 
-        // log.info("The magnitude of the sum of the real data is: {}", part1(lines));
+        log.info("The magnitude of the sum of the real data is: {}", part1(lines));
 
         // PART 2
 
@@ -100,7 +100,7 @@ public class Day18 {
             Pair sum = new Pair(currentPair, nextPair);
 
             log.trace("{}", sum);
-            while (sum.reduce(0))
+            while (sum.reduce(0, true) || sum.reduce(0, false))
                 log.trace("becomes {}", sum);
 
             currentPair = sum;
@@ -181,21 +181,23 @@ public class Day18 {
             this.right.parent = this;
         }
 
-        boolean reduce(int level) {
-            if (value >= 10) {
+        boolean reduce(int level, boolean explode) {
+
+            if (!explode && value >= 10) {
                 split();
                 return true;
             }
 
             if (!isRegularNumber()) {
-                if (level == 4) {
+                if (explode && level == 4) {
                     explode();
                     return true;
                 }
 
-                return left.reduce(level + 1) || right.reduce(level + 1);
+                return left.reduce(level + 1, explode) || right.reduce(level + 1, explode);
 
             }
+
             return false;
         }
 
@@ -208,19 +210,41 @@ public class Day18 {
          */
         void explode() {
             log.trace("Explode: {}", this);
-            Pair parentLeftRegularNumber = parent;
             // Check the left side
-            while (parentLeftRegularNumber != null) {
+            /*while (parentLeftRegularNumber != null) {
                 if (parentLeftRegularNumber.left.isRegularNumber()) {
                     parentLeftRegularNumber.left.value += this.left.value;
                     break;
                 }
                 parentLeftRegularNumber = parentLeftRegularNumber.parent;
+            }*/
+            Pair parentLeftRegularNumber = parent;
+            Pair previousPair = this;
+            while (parentLeftRegularNumber != null
+                   && !parentLeftRegularNumber.left.isRegularNumber()
+                   && parentLeftRegularNumber.right != previousPair) {
+
+                previousPair = parentLeftRegularNumber;
+                parentLeftRegularNumber = parentLeftRegularNumber.parent;
+
+            }
+            // At the top
+            if (parentLeftRegularNumber != null) {
+                if (parentLeftRegularNumber.left.isRegularNumber()) {
+                    parentLeftRegularNumber.left.value += this.left.value;
+                } else {
+                    parentLeftRegularNumber = parentLeftRegularNumber.left;
+                    // Find the first right regular number
+                    while (!parentLeftRegularNumber.right.isRegularNumber())
+                        parentLeftRegularNumber = parentLeftRegularNumber.right;
+
+                    parentLeftRegularNumber.right.value += this.left.value;
+                }
             }
 
             // Find parent with a right value
             Pair parentRightRegularNumber = parent;
-            Pair previousPair = this;
+            previousPair = this;
             while (parentRightRegularNumber != null
                    && !parentRightRegularNumber.right.isRegularNumber()
                    && parentRightRegularNumber.left != previousPair) {
