@@ -88,6 +88,8 @@ public class Day19 {
         Set<Point3D> baseMap = scannerMaps.remove(0);
         log.debug(baseMap.toString());
 
+        // While there are still maps to check, check them
+        
         // Start with two points in the base map, find their deltas
         Set<Point3D> matchingMap = null;
         Set<Point3D> checkedPoints = new HashSet<>();
@@ -95,74 +97,54 @@ public class Day19 {
         Point3D point1 = pointIterator.next();
         checkedPoints.add(point1);
         Point3D point2;
-        int deltaX;
-        int deltaY;
-        int deltaZ;
+        
+        nextPoints:
         while (matchingMap == null && pointIterator.hasNext()) {
             point2 = pointIterator.next();
             checkedPoints.add(point2);
 
-            deltaX = Math.abs(point1.x - point2.x);
-            deltaY = Math.abs(point1.y - point2.y);
-            deltaZ = Math.abs(point1.z - point2.z);
+           int deltaX = (point1.x - point2.x);
+           int deltaY = (point1.y - point2.y);
+           int deltaZ = (point1.z - point2.z);
 
             log.debug("Points {} and {} differ by: ({},{},{}).", point1, point2, deltaX, deltaY, deltaZ);
 
             // Try to find a matching pair in another map
-            for (Set<Point3D> scannerMap : scannerMaps) {
-                for (Point3D candidatePoint1 : scannerMap) {
-                    for (Point3D candidatePoint2 : scannerMap) {
-                        if (candidatePoint1.equals(candidatePoint2))
-                            continue;
+            // for (Set<Point3D> scannerMap : scannerMaps) {
+            Set<Point3D> scannerMap = scannerMaps.get(0);
 
-                        if (Math.abs(candidatePoint1.x - candidatePoint2.x) == deltaX &&
-                            Math.abs(candidatePoint1.y - candidatePoint2.y) == deltaY &&
-                            Math.abs(candidatePoint1.z - candidatePoint2.z) == deltaZ) {
-                            log.debug("Points {} and {} are a match!", candidatePoint1, candidatePoint2);
+            // Copy the map
 
-                            double distance11 = Math.sqrt(Math.pow((point1.x - candidatePoint1.x), 2) +
-                                                          Math.pow((point1.y - candidatePoint1.y), 2) +
-                                                          Math.pow((point1.z - candidatePoint1.z), 2));
-                            double distance12 = Math.sqrt(Math.pow((point1.x - candidatePoint2.x), 2) +
-                                                          Math.pow((point1.y - candidatePoint2.y), 2) +
-                                                          Math.pow((point1.z - candidatePoint2.z), 2));
+            Set<Point3D> rotatedMap = scannerMap.stream().map(Point3D::copy)
+                                                .collect(Collectors.toSet());
 
-                            int transX = distance11 < distance12 ? point1.x - candidatePoint1.x
-                                    : point1.x - candidatePoint2.x;
-                            int transY = distance11 < distance12 ? point1.y - candidatePoint1.y
-                                    : point1.y - candidatePoint2.y;
-                            int transZ = distance11 < distance12 ? point1.z - candidatePoint1.z
-                                    : point1.z - candidatePoint2.z;
+            // Go through the rotations
+            for (int x = 0; x < 4; x++)
+                for (int y = 0; y < 4; y++)
+                    for (int z = 0; z < 4; z++) {
 
-                            log.debug("The translation between the two spaces is: ({},{},{}).", transX, transY, transZ);
+                        for (Point3D point : rotatedMap)
+                            point.rotate(x, y, z);
 
-                            // Maybe take a copy of the map?
-                            Set<Point3D> translatedMap = scannerMap.stream().map(Point3D::copy)
-                                                                   .collect(Collectors.toSet());
-                            // Translate the coordinates
-                            translatedMap.stream().forEach(p -> p.translate(transX, transY, transZ));
-                            // log.debug("Translated points: {} and {}.", candidatePoint1, candidatePoint2);
-
-                            // Find a third point and try to align the two spaces
-                            // (Is this necessary? Can I just scan all orientations?)
-                            // for (Point3D point3 : baseMap) {
-
-                            // Found a third point, work out the rotation matrix...
-                            // }
-
-                            // Are the at least 12 matching points?
-                            Collection<Point3D> intersection = CollectionUtils.intersection(baseMap, translatedMap);
-                            log.debug("There are {} points in common: {}", intersection.size(), intersection);
+                        // If it matches, add it to the main map
+                        // and remove it from the set of maps to check
+                        Set<Point3D> foundMap = findInMap(baseMap, rotatedMap, point1, deltaX, deltaY, deltaZ);
+                        if (foundMap != null) {
+                            baseMap.addAll(foundMap);
+                            matchingMap = scannerMap;
+                            break nextPoints;
                         }
                     }
-                }
-            }
+            // }
 
+            
             // Shift the points and try again.
             point1 = point2;
         }
 
-        // Add the map to the main map
+        // Remove the matching map
+        if(matchingMap != null)
+            scannerMaps.remove(matchingMap);
 
         return baseMap.size();
     }
@@ -170,6 +152,62 @@ public class Day19 {
     private static int part2(final List<String> lines) {
 
         return -1;
+    }
+
+    private static Set<Point3D> findInMap(Set<Point3D> baseMap, Set<Point3D> scannerMap,
+                                          Point3D point1, int deltaX, int deltaY, int deltaZ) {
+
+        // Try to find a matching pair in another map
+        for (Point3D candidatePoint1 : scannerMap) {
+            for (Point3D candidatePoint2 : scannerMap) {
+                if (candidatePoint1.equals(candidatePoint2))
+                    continue;
+
+                if ((candidatePoint1.x - candidatePoint2.x) == deltaX &&
+                    (candidatePoint1.y - candidatePoint2.y) == deltaY &&
+                    (candidatePoint1.z - candidatePoint2.z) == deltaZ) {
+                    log.debug("Points {} and {} are a match!", candidatePoint1, candidatePoint2);
+
+                    double distance11 = Math.sqrt(Math.pow((point1.x - candidatePoint1.x), 2) +
+                                                  Math.pow((point1.y - candidatePoint1.y), 2) +
+                                                  Math.pow((point1.z - candidatePoint1.z), 2));
+                    double distance12 = Math.sqrt(Math.pow((point1.x - candidatePoint2.x), 2) +
+                                                  Math.pow((point1.y - candidatePoint2.y), 2) +
+                                                  Math.pow((point1.z - candidatePoint2.z), 2));
+
+                    int transX = distance11 < distance12 ? point1.x - candidatePoint1.x
+                            : point1.x - candidatePoint2.x;
+                    int transY = distance11 < distance12 ? point1.y - candidatePoint1.y
+                            : point1.y - candidatePoint2.y;
+                    int transZ = distance11 < distance12 ? point1.z - candidatePoint1.z
+                            : point1.z - candidatePoint2.z;
+
+                    log.debug("The translation between the two spaces is: ({},{},{}).", transX, transY, transZ);
+
+                    // Maybe take a copy of the map?
+                    Set<Point3D> translatedMap = scannerMap.stream().map(Point3D::copy)
+                                                           .collect(Collectors.toSet());
+                    // Translate the coordinates
+                    translatedMap.stream().forEach(p -> p.translate(transX, transY, transZ));
+                    // log.debug("Translated points: {} and {}.", candidatePoint1, candidatePoint2);
+
+                    // Find a third point and try to align the two spaces
+                    // (Is this necessary? Can I just scan all orientations?)
+                    // for (Point3D point3 : baseMap) {
+
+                    // Found a third point, work out the rotation matrix...
+                    // }
+
+                    // Are the at least 12 matching points?
+                    Collection<Point3D> intersection = CollectionUtils.intersection(baseMap, translatedMap);
+                    log.debug("There are {} points in common: {}", intersection.size(), intersection);
+
+                    if (intersection.size() >= 12)
+                        return translatedMap;
+                }
+            }
+        }
+        return null;
     }
 
     /**
