@@ -45,7 +45,7 @@ public class Day19 {
 
         log.info("There are {} beacons in the test map.", part1(testLines));
 
-        log.setLevel(Level.INFO);
+        // log.setLevel(Level.INFO);
 
         // Read the real file
         List<String> lines = Arrays.asList(FileUtils.readFileToStream(INPUT_TXT)
@@ -86,65 +86,70 @@ public class Day19 {
                                               .collect(Collectors.toList());
 
         Set<Point3D> baseMap = scannerMaps.remove(0);
-        log.debug(baseMap.toString());
+        log.trace(baseMap.toString());
 
         // While there are still maps to check, check them
-        
-        // Start with two points in the base map, find their deltas
-        Set<Point3D> matchingMap = null;
-        Set<Point3D> checkedPoints = new HashSet<>();
-        Iterator<Point3D> pointIterator = baseMap.iterator();
-        Point3D point1 = pointIterator.next();
-        checkedPoints.add(point1);
-        Point3D point2;
-        
-        nextPoints:
-        while (matchingMap == null && pointIterator.hasNext()) {
-            point2 = pointIterator.next();
-            checkedPoints.add(point2);
+        while (scannerMaps.size() > 0) {
+            log.debug("There are {} maps remaining to be checked.", scannerMaps.size());
 
-           int deltaX = (point1.x - point2.x);
-           int deltaY = (point1.y - point2.y);
-           int deltaZ = (point1.z - point2.z);
+            // Start with two points in the base map, find their deltas
+            Set<Point3D> matchingMap = null;
+            Set<Point3D> checkedPoints = new HashSet<>();
+            Iterator<Point3D> pointIterator = baseMap.iterator();
+            Point3D point1 = pointIterator.next();
+            checkedPoints.add(point1);
+            Point3D point2;
 
-            log.debug("Points {} and {} differ by: ({},{},{}).", point1, point2, deltaX, deltaY, deltaZ);
+            nextPoints: while (matchingMap == null && pointIterator.hasNext()) {
+                point2 = pointIterator.next();
+                checkedPoints.add(point2);
 
-            // Try to find a matching pair in another map
-            // for (Set<Point3D> scannerMap : scannerMaps) {
-            Set<Point3D> scannerMap = scannerMaps.get(0);
+                int deltaX = (point1.x - point2.x);
+                int deltaY = (point1.y - point2.y);
+                int deltaZ = (point1.z - point2.z);
 
-            // Copy the map
+                log.trace("Points {} and {} differ by: ({},{},{}).", point1, point2, deltaX, deltaY, deltaZ);
 
-            Set<Point3D> rotatedMap = scannerMap.stream().map(Point3D::copy)
-                                                .collect(Collectors.toSet());
+                int mapNum = 1;
+                // Try to find a matching pair in another map
+                for (Set<Point3D> scannerMap : scannerMaps) {
+                    // Set<Point3D> scannerMap = scannerMaps.get(0);
 
-            // Go through the rotations
-            for (int x = 0; x < 4; x++)
-                for (int y = 0; y < 4; y++)
-                    for (int z = 0; z < 4; z++) {
+                    // Copy the map
 
-                        for (Point3D point : rotatedMap)
-                            point.rotate(x, y, z);
+                    Set<Point3D> rotatedMap = scannerMap.stream().map(Point3D::copy)
+                                                        .collect(Collectors.toSet());
 
-                        // If it matches, add it to the main map
-                        // and remove it from the set of maps to check
-                        Set<Point3D> foundMap = findInMap(baseMap, rotatedMap, point1, deltaX, deltaY, deltaZ);
-                        if (foundMap != null) {
-                            baseMap.addAll(foundMap);
-                            matchingMap = scannerMap;
-                            break nextPoints;
-                        }
-                    }
-            // }
+                    // Go through the rotations
+                    for (int x = 0; x < 4; x++)
+                        for (int y = 0; y < 4; y++)
+                            for (int z = 0; z < 4; z++) {
 
-            
-            // Shift the points and try again.
-            point1 = point2;
+                                for (Point3D point : rotatedMap)
+                                    point.rotate(x, y, z);
+
+                                // If it matches, add it to the main map
+                                // and remove it from the set of maps to check
+                                Set<Point3D> foundMap = findInMap(baseMap, rotatedMap, point1, deltaX, deltaY, deltaZ);
+                                if (foundMap != null) {
+                                    log.debug("Found a match in map {}", mapNum);
+                                    baseMap.addAll(foundMap);
+                                    matchingMap = scannerMap;
+                                    break nextPoints;
+                                }
+                            }
+                    mapNum++;
+                }
+
+                // Shift the points and try again.
+                point1 = point2;
+
+            }
+
+            // Remove the matching map
+            if (matchingMap != null)
+                scannerMaps.remove(matchingMap);
         }
-
-        // Remove the matching map
-        if(matchingMap != null)
-            scannerMaps.remove(matchingMap);
 
         return baseMap.size();
     }
@@ -166,7 +171,7 @@ public class Day19 {
                 if ((candidatePoint1.x - candidatePoint2.x) == deltaX &&
                     (candidatePoint1.y - candidatePoint2.y) == deltaY &&
                     (candidatePoint1.z - candidatePoint2.z) == deltaZ) {
-                    log.debug("Points {} and {} are a match!", candidatePoint1, candidatePoint2);
+                    log.trace("Points {} and {} are a match!", candidatePoint1, candidatePoint2);
 
                     double distance11 = Math.sqrt(Math.pow((point1.x - candidatePoint1.x), 2) +
                                                   Math.pow((point1.y - candidatePoint1.y), 2) +
@@ -182,7 +187,7 @@ public class Day19 {
                     int transZ = distance11 < distance12 ? point1.z - candidatePoint1.z
                             : point1.z - candidatePoint2.z;
 
-                    log.debug("The translation between the two spaces is: ({},{},{}).", transX, transY, transZ);
+                    log.trace("The translation between the two spaces is: ({},{},{}).", transX, transY, transZ);
 
                     // Maybe take a copy of the map?
                     Set<Point3D> translatedMap = scannerMap.stream().map(Point3D::copy)
@@ -200,10 +205,11 @@ public class Day19 {
 
                     // Are the at least 12 matching points?
                     Collection<Point3D> intersection = CollectionUtils.intersection(baseMap, translatedMap);
-                    log.debug("There are {} points in common: {}", intersection.size(), intersection);
+                    log.trace("There are {} points in common: {}", intersection.size(), intersection);
 
-                    if (intersection.size() >= 12)
+                    if (intersection.size() >= 12) {
                         return translatedMap;
+                    }
                 }
             }
         }
