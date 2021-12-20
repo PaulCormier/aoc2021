@@ -1,7 +1,6 @@
 package aoc2021;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -53,9 +52,9 @@ public class Day20 {
         log.debug("\n{}", printMap(testImage));
 
         log.info("The number of lit pixels in the test data after two iterations is: {}",
-                 part1(testImage, TEST_INPUT_LINE));
+                 part1(testImage, TEST_INPUT_LINE, 2));
 
-        // log.setLevel(Level.INFO);
+        log.setLevel(Level.INFO);
 
         // Read the real file
         int[][] realImage = FileUtils.readFileToStream(INPUT_TXT)
@@ -64,17 +63,19 @@ public class Day20 {
                                      .toArray(new int[0][0]);
 
         log.info("The number of lit pixels in the real data after two iterations is: {}",
-                 part1(realImage, INPUT_LINE));
+                 part1(realImage, INPUT_LINE, 2));
 
         // PART 2
 
-        log.setLevel(Level.DEBUG);
+        // log.setLevel(Level.DEBUG);
 
-        // log.info("{}", part2(testLines));
+        log.info("The number of lit pixels in the test data after fifty iterations is: {}",
+                 part1(testImage, TEST_INPUT_LINE, 50));
 
         log.setLevel(Level.INFO);
 
-        // log.info("{}", part2(lines));
+        log.info("The number of lit pixels in the real data after fifty iterations is: {}",
+                 part1(realImage, INPUT_LINE, 50));
     }
 
     /**
@@ -85,9 +86,7 @@ public class Day20 {
      * @param imageFilter The filter to apply to the image.
      * @return The number of lit pixels after two iterations.
      */
-    private static int part1(int[][] image, String imageFilter) {
-
-        int iterations = 2;
+    private static int part1(int[][] image, String imageFilter, int iterations) {
 
         // Make a bigger canvas
         int buffer = 10;
@@ -230,11 +229,6 @@ public class Day20 {
         log.debug("\n{}", printMap(filteredImage));
 
         return Arrays.stream(filteredImage).flatMapToInt(Arrays::stream).sum();
-    }
-
-    private static int part2(final List<String> lines) {
-
-        return -1;
     }
 
     private static String printMap(int[][] map) {
