@@ -2,8 +2,10 @@ package aoc2021;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -94,6 +96,7 @@ public class Day19 {
 
             // Start with two points in the base map, find their deltas
             Map3D matchingMap = null;
+            int combinationsChecked = 0;
             nextMap: //
             for (Point3D point1 : baseMap.beacons) {
                 for (Point3D point2 : baseMap.beacons) {
@@ -108,6 +111,8 @@ public class Day19 {
 
                     matchingMap = scanMaps(baseMap, scannerMaps, point1, deltaX, deltaY, deltaZ);
 
+                    combinationsChecked++;
+
                     // Remove the matching map
                     if (matchingMap != null) {
                         scannerMaps.remove(matchingMap);
@@ -116,7 +121,9 @@ public class Day19 {
 
                 }
             }
-            log.trace("Next map...");
+            log.debug("Checked {} point combinations.", combinationsChecked);
+            log.debug("Distance cache contains {} entries.",
+                      baseMap.distanceCache.values().stream().flatMap(m -> m.values().stream()).count());
 
             if (matchingMap == null) {
                 log.warn("Didn't find any new maps...");
@@ -209,12 +216,12 @@ public class Day19 {
                     (candidatePoint1.z - candidatePoint2.z) == deltaZ) {
                     log.trace("Points {} and {} are a match!", candidatePoint1, candidatePoint2);
 
-                    double distance11 = Math.sqrt(Math.pow((point1.x - candidatePoint1.x), 2) +
-                                                  Math.pow((point1.y - candidatePoint1.y), 2) +
-                                                  Math.pow((point1.z - candidatePoint1.z), 2));
-                    double distance12 = Math.sqrt(Math.pow((point1.x - candidatePoint2.x), 2) +
-                                                  Math.pow((point1.y - candidatePoint2.y), 2) +
-                                                  Math.pow((point1.z - candidatePoint2.z), 2));
+                    double distance11 = baseMap.distanceCache.computeIfAbsent(point1, p -> new HashMap<>())
+                                                             .computeIfAbsent(candidatePoint1,
+                                                                              cp1 -> point1.distanceTo(cp1));
+                    double distance12 = baseMap.distanceCache.computeIfAbsent(point1, p -> new HashMap<>())
+                                                             .computeIfAbsent(candidatePoint2,
+                                                                              cp2 -> point1.distanceTo(cp2));
 
                     int transX = distance11 < distance12 ? point1.x - candidatePoint1.x
                             : point1.x - candidatePoint2.x;
@@ -315,6 +322,12 @@ public class Day19 {
             }
         }
 
+        double distanceTo(Point3D otherPoint) {
+            return Math.sqrt(Math.pow((this.x - otherPoint.x), 2) +
+                             Math.pow((this.y - otherPoint.y), 2) +
+                             Math.pow((this.z - otherPoint.z), 2));
+        }
+
         @Override
         public int hashCode() {
             final int prime = 31;
@@ -358,11 +371,15 @@ public class Day19 {
         Set<Point3D> beacons;
         Set<Point3D> scanners;
 
+        Map<Point3D, Map<Point3D, Double>> distanceCache;
+
         Map3D(Set<Point3D> points) {
             this.beacons = points;
             this.primaryScannerLocation = new Point3D(0, 0, 0);
             this.scanners = new HashSet<>();
             this.scanners.add(primaryScannerLocation);
+
+            this.distanceCache = new HashMap<>();
         }
 
         void translate(int x, int y, int z) {
