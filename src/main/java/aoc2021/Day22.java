@@ -41,7 +41,7 @@ public class Day22 {
         log.trace(testLines.toString());
 
         // log.info("{} cubes are on in the test data.",
-        // part1(Arrays.asList(testLines.get(0).split("\n"))));
+        // part1(Arrays.asList(testLines.get(1).split("\n"))));
 
         log.setLevel(Level.INFO);
 
@@ -57,8 +57,9 @@ public class Day22 {
         // log.info("{} cubes are on in initialization region of the test data.",
         // part1(Arrays.asList(testLines.get(1).split("\n"))));
 
-        log.info("{} cubes are on in the test data.", part2(Arrays.asList(testLines.get(1).split("\n"))));
+        log.info("{} cubes are on in the test data.", part2(Arrays.asList(testLines.get(0).split("\n"))));
 
+        log.info("{} cubes are on in the test data.", part2(Arrays.asList(testLines.get(1).split("\n"))));
         log.setLevel(Level.INFO);
 
         // log.info("{} cubes are on in the real data.", part2(lines));
@@ -136,21 +137,25 @@ public class Day22 {
                                     .map(l -> new Cuboid(Integer.toString(id.getAndIncrement()), l))
                                     .collect(Collectors.toList());
 
-        log.trace("\n{}", cuboids.stream().map(Cuboid::toString).collect(Collectors.joining("\n")));
+        log.debug("\n{}", cuboids.stream().map(Cuboid::toString).collect(Collectors.joining("\n")));
 
         // Apply the first 10 (this will give a good checkpoint for the test data)
         List<Cuboid> processed = new ArrayList<>();
-        processed.add(cuboids.get(0));
-        for (Cuboid otherCuboid : cuboids.subList(1, 10)) {
+        processed.add(cuboids.remove(0));
+        int limit = 19;
+        for (Cuboid otherCuboid : cuboids) {
             for (Cuboid cuboid : processed) {
                 if (cuboid.equals(otherCuboid))
                     continue;
                 if (cuboid.overlaps(otherCuboid)) {
-                   long difference= cuboid.subtract(otherCuboid);
+                    long difference = cuboid.subtract(otherCuboid);
                     log.debug("{} overlaps with {} by {}.", otherCuboid, cuboid, difference);
                 }
             }
             processed.add(otherCuboid);
+
+            if (limit-- <= 0)
+                break;
         }
 
         // Apply the overlaps from each subsequent cuboid
@@ -197,13 +202,13 @@ public class Day22 {
             this.zMin = coordinates[4];
             this.zMax = coordinates[5];
 
-            this.initialVolume = (xMax - xMin) * (yMax - yMin) * (zMax - zMin);
+            this.initialVolume = (long) (xMax - xMin + 1) * (yMax - yMin + 1) * (zMax - zMin + 1);
 
         }
 
         Cuboid(String id, boolean on, int xMin, int yMin, int zMin, int xMax, int yMax, int zMax) {
             this.id = id;
-            
+
             this.on = on;
             this.xMin = xMin;
             this.xMax = xMax;
@@ -212,7 +217,7 @@ public class Day22 {
             this.zMin = zMin;
             this.zMax = zMax;
 
-            this.initialVolume = (xMax - xMin) * (yMax - yMin) * (zMax - zMin);
+            this.initialVolume = (long) (xMax - xMin + 1) * (yMax - yMin + 1) * (zMax - zMin + 1);
         }
 
         /**
@@ -256,7 +261,7 @@ public class Day22 {
             int yMax = Math.min(this.yMax, otherCuboid.yMax);
             int zMax = Math.min(this.zMax, otherCuboid.zMax);
 
-            Cuboid overlap = new Cuboid(this.id + "-" + (containedCuboids.size() + 1),
+            Cuboid overlap = new Cuboid(this.id + "-" + otherCuboid.id,
                                         otherCuboid.on, xMin, yMin, zMin, xMax, yMax, zMax);
             // Add its overlap to any of the contained cuboids
             for (Cuboid containedCuboid : this.containedCuboids) {
