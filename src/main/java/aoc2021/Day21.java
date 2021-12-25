@@ -3,6 +3,7 @@ package aoc2021;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
@@ -30,6 +31,10 @@ public class Day21 {
     private static final int TEST_P1_START = 4;
     private static final int TEST_P2_START = 8;
 
+    private static final int[] DIRAC_DIE = { 0, 0, 0, 1, 3, 6, 7, 6, 3, 1 };
+
+    private static final int POSITIONS = 11;
+
     public static void main(String[] args) {
 
         log.setLevel(Level.DEBUG);
@@ -49,11 +54,12 @@ public class Day21 {
 
         log.setLevel(Level.DEBUG);
 
-        log.info("{}", part2(TEST_P1_START, TEST_P2_START));
+        log.info("The most wins by a player in the test data is: {}", part2(TEST_P1_START, TEST_P2_START));
 
         log.setLevel(Level.INFO);
 
-        // log.info("{}", part2(P1_START, P2_START));
+        // log.info("The most wins by a player in the test data is: {}", part2(P1_START,
+        // P2_START));
     }
 
     private static int part1(int p1Start, int p2Start) {
@@ -90,10 +96,35 @@ public class Day21 {
         return (p1Score > p2Score ? p2Score : p1Score) * (die.get() - 1);
     }
 
-    private static int part2(int p1Start, int p2Start) {
+    /**
+     * Play with the Dirac die until a player reaches 21. In how many universes does
+     * the player who won most win?
+     * 
+     * @param p1Start The starting position of player 1.
+     * @param p2Start The starting position of player 2.
+     * 
+     * @return The highest number of wins by player.
+     */
+    private static long part2(int p1Start, int p2Start) {
+        // Number of player Ns on a given space with a given score
+        long[][] p1Scores = new long[POSITIONS][30];
+        p1Scores[p1Start][0] = 1;
+        long[][] p2Scores = new long[POSITIONS][30];
+        p2Scores[p2Start][0] = 1;
 
-        int[] diracDie = { 0, 0, 0, 1, 3, 6, 7, 6, 3, 1 };
-        int positions = 11;
+        AtomicLong p1Wins = new AtomicLong(0);
+        AtomicLong p2Wins = new AtomicLong(0);
+
+        // Play a round
+
+        return Math.max(p1Wins.longValue(), p2Wins.longValue());
+    }
+
+    private void playGame(long[][] p1Scores, long[][] p2Scores, AtomicLong p1Wins, AtomicLong p2Wins) {
+
+    }
+
+    private static int part2_old(int p1Start, int p2Start) {
 
         // Number of player Ns in a position
         // (with a dummy 0 position because I don't want to deal with the index offset)
@@ -103,9 +134,9 @@ public class Day21 {
         // p2Positions[p2Start] = 1;
 
         // Number of player Ns on a given space with a given score
-        long[][] p1Scores = new long[positions][30];
+        long[][] p1Scores = new long[POSITIONS][30];
         p1Scores[p1Start][0] = 1;
-        long[][] p2Scores = new long[positions][30];
+        long[][] p2Scores = new long[POSITIONS][30];
         p2Scores[p2Start][0] = 1;
 
         int maxScore = 21;
@@ -120,22 +151,22 @@ public class Day21 {
             log.debug("There are {} universes on turn {}.", games, turn);
             // Player 1's turn
             // long[] newPositions = new long[positions];
-            long[][] newScores = new long[positions][30];
-            for (int position = 1; position < positions; position++) {
-                for (int roll = 3; roll < diracDie.length; roll++) {
+            long[][] newScores = new long[POSITIONS][30];
+            for (int position = 1; position < POSITIONS; position++) {
+                for (int roll = 3; roll < DIRAC_DIE.length; roll++) {
                     // Move the pieces
                     int newPosition = (position + roll - 1) % 10 + 1;
                     // newPositions[newPosition] += p1Positions[position] * diracDie[roll];
 
                     // Tally the scores
                     for (int s = 0; s + newPosition < 30; s++) {
-                        newScores[newPosition][s + newPosition] += p1Scores[position][s] * diracDie[roll];
+                        newScores[newPosition][s + newPosition] += p1Scores[position][s] * DIRAC_DIE[roll];
                     }
                 }
             }
-            log.debug("Player 1 scores:\n{}",printMap(newScores));
+            log.debug("Player 1 scores:\n{}", printMap(newScores));
             // Count winners
-            for (int position = 1; position < positions; position++) {
+            for (int position = 1; position < POSITIONS; position++) {
                 for (int score = 21; score < newScores[position].length; score++) {
                     long winners = newScores[position][score];
                     p1Wins[turn] += winners;
@@ -158,21 +189,21 @@ public class Day21 {
 
             // Player 2's turn
             // newPositions = new long[positions];
-            newScores = new long[positions][30];
-            for (int position = 1; position < positions; position++) {
-                for (int roll = 3; roll < diracDie.length; roll++) {
+            newScores = new long[POSITIONS][30];
+            for (int position = 1; position < POSITIONS; position++) {
+                for (int roll = 3; roll < DIRAC_DIE.length; roll++) {
                     // Move the pieces
                     int newPosition = (position + roll - 1) % 10 + 1;
                     // newPositions[newPosition] += p2Positions[position] * diracDie[roll];
 
                     // Tally the scores
                     for (int s = 0; s + newPosition < 30; s++) {
-                        newScores[newPosition][s + newPosition] += p2Scores[position][s] * diracDie[roll];
+                        newScores[newPosition][s + newPosition] += p2Scores[position][s] * DIRAC_DIE[roll];
                     }
                 }
             }
             games *= 27;
-            log.debug("Player 2 scores:\n{}",printMap(newScores));
+            log.debug("Player 2 scores:\n{}", printMap(newScores));
             // Count winners
             for (int position = 1; position < newScores.length; position++) {
                 for (int score = 21; score < newScores[position].length; score++) {
@@ -199,7 +230,6 @@ public class Day21 {
 
             log.debug("Player 1 won {} times, player 2 won {} times.", p1Wins[turn], p2Wins[turn]);
 
-            
             turn++;
         }
 
@@ -218,8 +248,8 @@ public class Day21 {
     private static String printMap(long[][] map, String separator) {
         return Arrays.stream(map)
                      .map(l -> LongStream.of(l)
-                                        .mapToObj(Long::toString)
-                                        .collect(Collectors.joining(separator)))
+                                         .mapToObj(Long::toString)
+                                         .collect(Collectors.joining(separator)))
                      .collect(Collectors.joining("\n"));
     }
 
