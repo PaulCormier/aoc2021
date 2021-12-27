@@ -116,11 +116,100 @@ public class Day21 {
         AtomicLong p2Wins = new AtomicLong(0);
 
         // Play a round
+        playGame(p1Scores, p2Scores, p1Wins, p2Wins);
 
         return Math.max(p1Wins.longValue(), p2Wins.longValue());
     }
 
-    private void playGame(long[][] p1Scores, long[][] p2Scores, AtomicLong p1Wins, AtomicLong p2Wins) {
+    private static void playGame(long[][] p1Scores, long[][] p2Scores, AtomicLong p1Wins, AtomicLong p2Wins) {
+
+        // Player 1's turn
+
+        // Roll some dice
+        long[][] newScores = new long[POSITIONS][30];
+        for (int position = 1; position < POSITIONS; position++) {
+            for (int rollTotal = 3; rollTotal < DIRAC_DIE.length; rollTotal++) {
+                // Move the pieces
+                int newPosition = (position + rollTotal - 1) % 10 + 1;
+
+                // Tally the scores
+                for (int score = 0; score + newPosition < 30; score++) {
+                    // Count winner
+                    if (score + newPosition >= 21)
+                        p1Wins.addAndGet(p1Scores[position][score] * DIRAC_DIE[rollTotal]);
+
+                    // Adjust non-winners
+                    else
+                        newScores[newPosition][score + newPosition] += p1Scores[position][score] * DIRAC_DIE[rollTotal];
+                }
+
+                //
+            }
+        }
+        log.debug("Player 1 wins: {}; Remaining scores:\n{}", p1Wins, printMap(newScores));
+        // // Count winners
+        // // TODO Could this be moved up into the previous loop?
+        // for (int position = 1; position < POSITIONS; position++) {
+        // for (int score = 21; score < newScores[position].length; score++) {
+        // long winners = newScores[position][score];
+        // p1Wins.addAndGet(winners);
+        //
+        // // Remove them
+        // newScores[position][score] = 0;
+        // }
+        // }
+
+        // Multiply the player 2 counts by the three dice rolls.
+        // TODO Another trip through the map indices which could be in the previous
+        // loop...
+        for (int position = 1; position < p2Scores.length; position++) {
+            for (int score = 0; score < p2Scores[position].length; score++) {
+                p2Scores[position][score] *= 27;
+            }
+        }
+
+        p1Scores = newScores;
+
+        // Player 2's turn
+        // newPositions = new long[positions];
+        newScores = new long[POSITIONS][30];
+        for (int position = 1; position < POSITIONS; position++) {
+            for (int rollTotal = 3; rollTotal < DIRAC_DIE.length; rollTotal++) {
+                // Move the pieces
+                int newPosition = (position + rollTotal - 1) % 10 + 1;
+                // newPositions[newPosition] += p2Positions[position] * diracDie[roll];
+
+                // Tally the scores
+                for (int score = 0; score + newPosition < 30; score++) {
+                    // count the winners
+                    if (score + newPosition >= 21)
+                        p2Wins.addAndGet(p2Scores[position][score] * DIRAC_DIE[rollTotal]);
+
+                    // Adjust non-winners
+                    else
+                        newScores[newPosition][score + newPosition] += p2Scores[position][score] * DIRAC_DIE[rollTotal];
+                }
+            }
+        }
+        log.debug("Player 2 wins: {}; Remaining scores:\n{}", p2Wins, printMap(newScores));
+        // // Count winners
+        // for (int position = 1; position < newScores.length; position++) {
+        // for (int score = 21; score < newScores[position].length; score++) {
+        // long winners = newScores[position][score];
+        // p2Wins.addAndGet(winners);
+        //
+        // // Remove them
+        // newScores[position][score] = 0;
+        // }
+        // }
+        // Multiply the player 1 counts by the three dice rolls.
+        for (int position = 1; position < p1Scores.length; position++) {
+            for (int score = 0; score < p1Scores[position].length; score++) {
+                p1Scores[position][score] *= 27;
+            }
+        }
+
+        p2Scores = newScores;
 
     }
 
