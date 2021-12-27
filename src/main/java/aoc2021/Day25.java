@@ -60,14 +60,7 @@ public class Day25 {
         log.info("The sea cucumbers stop moving after {} steps in the real data.", part1(map));
 
         // PART 2
-
-        log.setLevel(Level.DEBUG);
-
-        log.info("{}", part2(testMap));
-
-        log.setLevel(Level.INFO);
-
-        log.info("{}", part2(map));
+        // No part 2 for Christmas!
     }
 
     private static int part1(int[][] map) {
@@ -111,11 +104,6 @@ public class Day25 {
         }
 
         return step;
-    }
-
-    private static int part2(final int[][] testMap) {
-
-        return -1;
     }
 
     private static String printMap(int[][] map) {
