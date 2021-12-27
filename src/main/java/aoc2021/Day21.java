@@ -58,8 +58,7 @@ public class Day21 {
 
         log.setLevel(Level.INFO);
 
-        // log.info("The most wins by a player in the test data is: {}", part2(P1_START,
-        // P2_START));
+        log.info("The most wins by a player in the real data is: {}", part2(P1_START, P2_START));
     }
 
     private static int part1(int p1Start, int p2Start) {
@@ -106,19 +105,61 @@ public class Day21 {
      * @return The highest number of wins by player.
      */
     private static long part2(int p1Start, int p2Start) {
-        // Number of player Ns on a given space with a given score
+        /*// Number of player Ns on a given space with a given score
         long[][] p1Scores = new long[POSITIONS][30];
         p1Scores[p1Start][0] = 1;
         long[][] p2Scores = new long[POSITIONS][30];
         p2Scores[p2Start][0] = 1;
-
+        
         AtomicLong p1Wins = new AtomicLong(0);
         AtomicLong p2Wins = new AtomicLong(0);
-
+        
         // Play a round
         playGame(p1Scores, p2Scores, p1Wins, p2Wins);
+        
+        return Math.max(p1Wins.longValue(), p2Wins.longValue());*/
 
-        return Math.max(p1Wins.longValue(), p2Wins.longValue());
+        Result gameResults = playGame(0, 0, p1Start, p2Start);
+
+        log.debug("player 1 wins in {} universes, while player 2 wins in {} universes.",
+                  gameResults.p1Wins, gameResults.p2Wins);
+
+        return Math.max(gameResults.p1Wins, gameResults.p2Wins);
+    }
+
+    private static Result playGame(int p1Score, int p2Score, int p1Position, int p2Position) {
+        final int winningScore = 21;
+
+        // First, check if this is a winning state
+        if (p1Score >= winningScore)
+            return new Result(1, 0);
+        else if (p2Score >= winningScore)
+            return new Result(0, 1);
+
+        // Neither wins, roll the dice and try the outcome states
+        long p1Wins = 0;
+        long p2Wins = 0;
+
+        // There are 7 possible states out of this state
+        for (int rollTotal = 3; rollTotal < DIRAC_DIE.length; rollTotal++) {
+
+            // Check the outcome of each state
+            int newPosition = (p1Position + rollTotal - 1) % 10 + 1;
+
+            // Player 2 goes next, set them as p1
+            Result rollResult = playGame(p2Score, p1Score + newPosition, p2Position, newPosition);
+
+            // Multiply by the number of universes in which this happens
+            rollResult.p1Wins *= DIRAC_DIE[rollTotal];
+            rollResult.p2Wins *= DIRAC_DIE[rollTotal];
+
+            // Tally the results (remembering that p1 and p2 are switched)
+            p1Wins += rollResult.p2Wins;
+            p2Wins += rollResult.p1Wins;
+
+        }
+
+        return new Result(p1Wins, p2Wins);
     }
 
     private static void playGame(long[][] p1Scores, long[][] p2Scores, AtomicLong p1Wins, AtomicLong p2Wins) {
@@ -143,7 +184,7 @@ public class Day21 {
                         newScores[newPosition][score + newPosition] += p1Scores[position][score] * DIRAC_DIE[rollTotal];
                 }
 
-                //
+                // The non-winners go on to play against player 2
             }
         }
         log.debug("Player 1 wins: {}; Remaining scores:\n{}", p1Wins, printMap(newScores));
@@ -210,6 +251,10 @@ public class Day21 {
         }
 
         p2Scores = newScores;
+
+        // Anybody left playing?
+
+        // Play the next round...
 
     }
 
@@ -342,4 +387,14 @@ public class Day21 {
                      .collect(Collectors.joining("\n"));
     }
 
+    private static class Result {
+        long p1Wins;
+        long p2Wins;
+
+        public Result(long p1Wins, long p2Wins) {
+            this.p1Wins = p1Wins;
+            this.p2Wins = p2Wins;
+        }
+
+    }
 }
