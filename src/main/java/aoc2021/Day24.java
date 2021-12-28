@@ -5,11 +5,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.IntSupplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +36,7 @@ public class Day24 {
 
     public static void main(String[] args) {
 
-        log.setLevel(Level.DEBUG);
+        // log.setLevel(Level.DEBUG);
 
         // Read the test file
         List<String> testLines = FileUtils.readFile(TEST_INPUT_TXT);
@@ -45,13 +48,16 @@ public class Day24 {
             testALU.reset();
             testALU.input.add(i);
             testALU.run();
-            log.info("Test result for input {}: {}", i, testALU);
+            log.debug("Test result for input {}: {}", i, testALU);
         });
 
         log.setLevel(Level.INFO);
 
-        // Read the real file
-        List<String> lines = FileUtils.readFile(INPUT_TXT);
+        // Read the real file, filter blank lines and comments
+        List<String> lines = FileUtils.readFileToStream(INPUT_TXT)
+                                      .map(l -> l.replaceAll("#.*$", "").trim())
+                                      .filter(StringUtils::isNotBlank)
+                                      .collect(Collectors.toList());
 
         log.info("The largest valid serial number is: {}", part1(lines));
 
@@ -61,7 +67,7 @@ public class Day24 {
 
         // log.info("{}", part2(testLines));
 
-        log.setLevel(Level.INFO);
+        // log.setLevel(Level.INFO);
 
         log.info("The smalest valid serial number is: {}", part2(lines));
     }
@@ -96,27 +102,93 @@ public class Day24 {
 
     private static long part2(final List<String> lines) {
 
-        // Build an ALU with the given instructions
-        ALU alu = new ALU(lines);
+        // Going to need to narrow down the digits of the serial number, maybe?
 
+        // How about splitting the ALU up into 14 pieces?
+        List<ALU> alus = IntStream.range(0, 14)
+                                  .mapToObj(i -> lines.subList(i * 18, i * 18 + 18))
+                                  .peek(l -> log.trace(l.toString()))
+                                  .map(ALU::new)
+                                  .collect(Collectors.toList());
+
+        // Work out the I/O combinations for w and z
+        ALU alu1 = alus.get(0);
+        List<Integer> alu1Results = IntStream.rangeClosed(1, 9)
+                                             .map(w -> {
+                                                 alu1.reset();
+                                                 alu1.input.add(w);
+                                                 alu1.run();
+                                                 return alu1.z.intValue();
+                                             })
+                                             .boxed()
+                                             .collect(Collectors.toList());
+        log.debug("ALU1 results: {}", alu1Results); // z1 is between 2 and 10 (w+1) {Technically z*26+w+1, but z=0)
+
+        ALU alu2 = alus.get(1);
+        List<List<Integer>> alu2Results = IntStream.rangeClosed(2, 10)
+                                                   .mapToObj(z -> IntStream.rangeClosed(1, 9)
+                                                                           .map(w -> {
+                                                                               alu2.reset();
+                                                                               alu2.z.set(z);
+                                                                               alu2.input.add(w);
+                                                                               alu2.run();
+                                                                               return alu2.z.intValue();
+                                                                           })
+                                                                           .boxed()
+                                                                           .collect(Collectors.toList()))
+                                                   .collect(Collectors.toList());
+        log.debug("ALU2 results: {}", alu2Results); // z2 is z1*26+w+10
+
+        int aluNum = 7;
+        ALU alu = alus.get(aluNum - 1);
+
+        int zMin = 94;
+        int zMax = zMin + 8;
+
+        Map<Integer, List<Integer>> aluResults = new TreeMap<>();
+        for (int z : IntStream.rangeClosed(zMin, zMax).toArray()) {
+            aluResults.put(z, IntStream.rangeClosed(1, 9)
+                                       .map(w -> {
+                                           alu.reset();
+                                           alu.z.set(z);
+                                           alu.input.add(w);
+                                           alu.run();
+                                           return alu.z.intValue();
+                                       })
+                                       .boxed()
+                                       .collect(Collectors.toList()));
+        }
+        log.debug("ALU{} results: {}", aluNum, aluResults);
+        // z3 = z2*26 + w + 12 (62-70 to 270-278)
+        // z4 = z3*26 + w + 6 (1625-1633 to 7241-7249) - Noticing a pattern?
+        // z5 = z3*26 + w + 3 or z3+z3/26-2 if w = z4%26-6  (try 1622-1630, 7238-7246, and 62,89,116,143)  - No, but this one is interesting for w = 7-9.
+        // z6 =  Hmm.... With the outliers, z6 = z5(0) + 6 - ?; The others are just z5(0) + w + 6 (try 7244-7252 and 1628-1636, and 94-102, 68-76)
+        // z7 =  
+
+
+
+        // Build a full ALU with the given instructions
+        ALU fullAlu = new ALU(lines);
+
+        // Test the number
         long serialNumber = 11111111111111L;
-        do {
-            log.debug("Input: {}", serialNumber);
-            alu.reset();
-            // Load the ALU with an input
-            Long.toString(serialNumber).chars().map(Character::getNumericValue).forEach(alu.input::add);
-            if (alu.input.contains(0))
-                continue;
+        // do {
+        log.debug("Input: {}", serialNumber);
+        fullAlu.reset();
+        // Load the ALU with an input
+        Long.toString(serialNumber).chars().map(Character::getNumericValue).forEach(fullAlu.input::add);
+        // if (alu.input.contains(0))
+        // continue;
 
-            // Run the ALU
-            alu.run();
+        // Run the ALU
+        fullAlu.run();
 
-            log.debug("ALU result: {}", alu);
-            // If the serial number is valid
-            if (alu.z.get() == 0)
-                return serialNumber;
+        log.debug("ALU result: {}", fullAlu);
+        // If the serial number is valid
+        if (fullAlu.z.get() == 0)
+            return serialNumber;
 
-        } while (serialNumber++ <= 99999999999999L);
+        // } while (serialNumber++ <= 99999999999999L);
 
         return serialNumber;
     }
