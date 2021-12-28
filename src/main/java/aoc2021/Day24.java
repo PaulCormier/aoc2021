@@ -8,7 +8,6 @@ import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.IntSupplier;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.math.NumberUtils;
@@ -60,7 +59,7 @@ public class Day24 {
 
         log.setLevel(Level.DEBUG);
 
-//        log.info("{}", part2(testLines));
+        // log.info("{}", part2(testLines));
 
         log.setLevel(Level.INFO);
 
@@ -119,7 +118,7 @@ public class Day24 {
 
         } while (serialNumber++ <= 99999999999999L);
 
-        return -1;
+        return serialNumber;
     }
 
     private static final class ALU {
