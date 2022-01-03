@@ -101,9 +101,11 @@ public class Day24 {
     }
 
     private static long part2(final List<String> lines) {
-        ALU2 part2Alu = new ALU2();
+         ALU2 part2Alu = new ALU2();
+        
+         return part2Alu.run();
 
-        return part2Alu.run();
+
     }
 
     private static long part2_old(final List<String> lines) {
@@ -286,6 +288,947 @@ public class Day24 {
      * to find the lowest valid serial number.
      */
     private static final class ALU2 {
+        final long START = 45_199_191_516_111L;
+
+        List<Integer> startingDigits = Long.toString(START)
+                                           .chars()
+                                           .map(Character::getNumericValue)
+                                           .boxed()
+                                           .collect(Collectors.toList());
+
+        long count = 0;
+
+        long run() {
+            log.debug("Starting at: {}", START);
+            return firstDigit(0);
+        }
+
+        private long firstDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // div z 1
+                z /= 1;
+                // add x 10
+                x += 10;
+                // x = z % 26 + 10;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = z % 26 + 10 == w ? 0 : 1; // z=0 for the first digit
+                // x = 10 == w ? 0 : 1; // w < 10
+                // x=1;
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                y *= x;
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y; // z=0 for the first digit
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 1
+                y = w + 1;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z = w + 1;
+
+                // Call the next stage
+                result = secondDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 10_000_000_000_000L;
+            }
+
+            return result;
+        }
+
+        private long secondDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // x=z%26;
+                // div z 1
+                z /= 1;
+                // add x 11
+                x += 11;
+                // x = z % 26 + 11;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = z % 26 + 11 == w ? 0 : 1;
+                // x = 1; // z>0 and w<9
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                // y *= x; // x=1
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+                // z *= 26;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 9
+                y = w + 9;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z += w + 9;
+
+                // z = z * 26 + w + 9;
+
+                // Call the next stage
+                result = thirdDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 1_000_000_000_000L;
+            }
+
+            return result;
+        }
+
+        private long thirdDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // div z 1
+                z /= 1;
+                // add x 14
+                x += 14;
+                // x = z % 26 + 14;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = z % 26 + 14 == w ? 0 : 1;
+                // x = 1; // z>0 and w<9
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                // y *= x; // x=1
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+                // z *= 26;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 12
+                y = w + 12;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z += w + 12;
+
+                // z = z * 26 + w + 12;
+
+                // Call the next stage
+                result = fourthDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 100_000_000_000L;
+            }
+
+            return result;
+        }
+
+        private long fourthDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                log.debug("Checked: {}", count);
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // div z 1
+                z /= 1;
+                // add x 13
+                x += 13;
+                // x = z % 26 + 13;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = z % 26 + 13 == w ? 0 : 1;
+                // x = 1; // z>0 and w<9
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                y *= x; // x=1
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+                // z *= 26;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 6
+                y = w + 6;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z += w + 6;
+
+                // z = z * 26 + w + 6;
+
+                // Call the next stage
+                result = fifthDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 10_000_000_000L;
+            }
+
+            return result;
+        }
+
+        private long fifthDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // div z 1
+                z /= 1;
+                // add x -6
+                x += -6;
+                // x = z % 26 - 6;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = z % 26 - 6 == w ? 0 : 1;
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                y *= x;
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+                // z *= 25 * x + 1;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 9
+                y = w + 9;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z += (w + 9) * x;
+
+                // Call the next stage
+                result = sixthDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 1_000_000_000L;
+            }
+
+            return result;
+        }
+
+        private long sixthDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // x = z % 26;
+                // div z 26
+                z /= 26;
+                // add x -14
+                x += -14;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = x - 14 == w ? 0 : 1;
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                y *= x;
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+                // z *= 25 * x + 1;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 15
+                y = w + 15;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z += (w + 15) * x;
+
+                // Call the next stage
+                result = seventhDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 100_000_000L;
+            }
+
+            return result;
+        }
+
+        private long seventhDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // x = z % 26;
+                // div z 1
+                z /= 1;
+                // add x 14
+                x += 14;
+                // x = z % 26 + 14;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = x + 14 == w ? 0 : 1;
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                y *= x;
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+                // z *= 25 * x + 1;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 7
+                y = w + 7;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z += (w + 7) * x;
+
+                // Call the next stage
+                result = eighthDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 10_000_000L;
+            }
+
+            return result;
+        }
+
+        private long eighthDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // div z 1
+                z /= 1;
+                // add x 13
+                x += 13;
+                // x = z % 26 + 13;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = z % 26 + 13 == w ? 0 : 1;
+                // x = 1; // z>0 and w<9
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                y *= x; // x=1
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+                // z *= 26;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 12
+                y = w + 12;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z += w + 12;
+
+                // z = z * 26 + w + 12;
+
+                // Call the next stage
+                result = ninthDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 1_000_000L;
+            }
+
+            return result;
+        }
+
+        private long ninthDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // x = z % 26;
+                // div z 26
+                z /= 26;
+                // add x -8
+                x += -8;
+                // x = z % 26 - 8;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = x - 8 == w ? 0 : 1;
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                y *= x;
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+                // z *= 25 * x + 1;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 15
+                y = w + 15;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+//                z += (w + 15) * x;
+
+                // Call the next stage
+                result = tenthDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 100_000L;
+            }
+
+            return result;
+        }
+
+        private long tenthDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // x = z % 26;
+                // div z 26
+                z /= 26;
+                // add x -15
+                x += -15;
+                // x = z % 26 - 15;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = x - 15 == w ? 0 : 1;
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                y *= x;
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+                // z *= 25 * x + 1;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 3
+                y = w + 3;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z += (w + 3) * x;
+
+                // Call the next stage
+                result = eleventhDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 10_000L;
+            }
+
+            return result;
+        }
+
+        private long eleventhDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // div z 1
+                z /= 1;
+                // add x 10
+                x += 10;
+                // x = z % 26 + 10;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = z % 26 + 10 == w ? 0 : 1; // z=0 for the first digit
+                // x = 10 == w ? 0 : 1; // w < 10
+                // x=1;
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                y *= x;
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 6
+                y = w + 6;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z = z * 26 + w + 6;
+
+                // Call the next stage
+                result = twelfthDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 1_000L;
+            }
+
+            return result;
+        }
+
+        private long twelfthDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // x = z % 26;
+                // div z 26
+                z /= 26;
+                // add x -11
+                x += -11;
+                // x = z % 26 - 11;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = x - 11 == w ? 0 : 1;
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                y *= x;
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+                // z *= 25 * x + 1;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 2
+                y = w + 2;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z += (w + 2) * x;
+
+                // Call the next stage
+                result = thirteenthDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 100L;
+            }
+
+            return result;
+        }
+
+        private long thirteenthDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // x = z % 26;
+                // div z 26
+                z /= 26;
+                // add x -13
+                x += -13;
+                // x = z % 26 - 13;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = x - 13 == w ? 0 : 1;
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                y *= x;
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+                // z *= 25 * x + 1;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 10
+                y = w + 10;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z += (w + 10) * x;
+
+                // Call the next stage
+                result = fourteenthDigit(z);
+
+                // If the result is > 0, return the digit.
+                if (result > 0)
+                    return result + w * 10L;
+            }
+
+            return result;
+        }
+
+        private long fourteenthDigit(final long initialZ) {
+            long result = -1;
+            long x;
+            long y;
+            long z;
+
+            // Try each digit
+            long start = startingDigits.size() > 0 ? startingDigits.remove(0) : 1;
+            for (long w = start; w < 10; w++) {
+                count++;
+                z = initialZ;
+                // Run the code
+                // inp w
+                // mul x 0
+                x = 0;
+                // add x z
+                x = z;
+                // mod x 26
+                x %= 26;
+                // x = z % 26;
+                // div z 26
+                z /= 26;
+                // add x -4
+                x += -4;
+                // x = z % 26 - 4;
+                // eql x w
+                x = x == w ? 1 : 0;
+                // eql x 0
+                x = x == 0 ? 1 : 0;
+
+                // x = x - 4 == w ? 0 : 1;
+
+                // mul y 0
+                y = 0;
+                // add y 25
+                y = 25;
+                // mul y x
+                y *= x;
+                // add y 1
+                y += 1;
+                // mul z y
+                z *= y;
+                // z *= 25 * x + 1;
+
+                // mul y 0
+                y = 0;
+                // add y w
+                // add y 12
+                y = w + 12;
+                // mul y x
+                y *= x;
+                // add z y
+                z += y;
+                // z += (w + 12) * x;
+
+                // Last stage
+                // If z is 0, return the digit.
+                if (z == 0) {
+                    log.info("Found it!");
+                    return w;
+                }
+            }
+
+            return result;
+        }
+    }
+
+    /**
+     * Hardcode the instructions for each stage of the ALU. Set it to work forward
+     * to find the lowest valid serial number.
+     * 
+     * XXX This is probably wrong...
+     */
+    private static final class ALU2Optimized {
         long total = 11_111_111_111_111L;
 
         long run() {

@@ -280,4 +280,4 @@ mul y x  # x must be 0, or -z/y
 add z y  # y must be 0, or -z
 # If z is 0 at this point, it's a valid serial number.
 
-# Apparently 45199191516111 is wrong
+# Apparently 45199191516111 is too low
